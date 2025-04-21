@@ -1,159 +1,172 @@
-# Compilador C → Python
+
+
+# Documento Inicial – Linguagem Python para C
 
 ## Objetivo
-
-Desenvolver um compilador capaz de traduzir programas escritos em uma subconjunto robusto da linguagem C para programas equivalentes em Python 3, com suporte a estruturas fundamentais da linguagem, escopos, funções, expressões, laços e controle de fluxo.
-
----
-
-## Tokens Reconhecidos
-
-### Palavras-chave
-- Tipos: `int`, `float`, `char`, `void`
-- Controle de fluxo: `if`, `else`, `while`, `for`, `break`, `continue`, `return`
-- Entrada e saída: `printf`, `scanf`
-
-### Operadores
-- Aritméticos: `+`, `-`, `*`, `/`, `%`
-- Relacionais: `==`, `!=`, `<`, `>`, `<=`, `>=`
-- Atribuição: `=`, `+=`, `-=`, `*=`, `/=`
-- Lógicos: `&&`, `||`, `!`
-- Incremento/decremento: `++`, `--`
-
-### Delimitadores
-- `(`, `)`, `{`, `}`, `[`, `]`, `;`, `,`
-
-### Identificadores e Literais
-- Identificadores: `[a-zA-Z_][a-zA-Z0-9_]*`
-- Literais:
-  - Inteiros: `[0-9]+`
-  - Flutuantes: `[0-9]+\.[0-9]+`
-  - Strings: `"[^"]*"`
-  - Caracteres: `'.'`
-
-### Comentários
-- Linha única: `// ...`
-- Bloco: `/* ... */`
+Definir um subconjunto da linguagem Python que será aceito pelo compilador e como ele será transformado em C. Este documento inclui os tokens válidos, as estruturas sintáticas suportadas e exemplos de tradução.
 
 ---
 
-## Estruturas Suportadas
+## TOKENS
 
-### Tipos de dados
-- `int`, `float`, `char`, `void`
-- Suporte básico a arrays unidimensionais: `int arr[10];`
+### Palavras-chave suportadas:
 
-### Declarações e escopo
-- Variáveis globais e locais
-- Atribuições com operadores compostos
+```
+def, return, if, else, elif, while, for, in, range, True, False
+```
 
-### Funções
-- Declaração e definição
-- Argumentos e retorno
-- Chamadas de funções entre si
+### Identificadores:
 
-### Controle de fluxo
-- Condicionais: `if`, `else if`, `else`
-- Laços: `while`, `for`, com `break`, `continue`
-- `return`
+- Letras (`a-z`, `A-Z`), underscore (`_`), seguidos de letras, números ou underscores.
 
-### Expressões
-- Aritméticas, relacionais, lógicas e chamadas de função dentro de expressões
+### Operadores:
+```
++  -  *  /  %  ==  !=  <  >  <=  >=  =  and  or  not
+```
 
-### Entrada e saída
-- `printf` → mapeado para `print()`
-- `scanf` → mapeado para `input()` com conversão
+### Delimitadores:
+```
+( )  [ ]  { }  ,  :  ;  \n
+```
+
+### Tipos primitivos:
+```
+int, float, bool
+```
+
+### Literais:
+- Inteiros: `123`
+- Ponto flutuante: `3.14`
+- Booleanos: `True`, `False`
 
 ---
 
-## Tradução C → Python (Exemplos)
+## ESTRUTURAS DA LINGUAGEM SUPORTADAS
 
-### Função com parâmetros e retorno
+### 1. Funções
 
-**Código C:**
+#### Python
+```python
+def soma(a: int, b: int) -> int:
+    return a + b
+```
+
+#### C
 ```c
 int soma(int a, int b) {
     return a + b;
 }
 ```
 
-**Código Python:**
+---
+
+### 2. Declaração de variáveis
+
+#### Python
 ```python
-def soma(a, b):
-    return a + b
+x = 5
+```
+
+#### C
+```c
+int x = 5;
 ```
 
 ---
 
-### Laço `for` com incremento
+### 3. Condicionais
 
-**Código C:**
-```c
-for (int i = 0; i < 10; i++) {
-    printf("%d\n", i);
-}
-```
-
-**Código Python:**
+#### Python
 ```python
-for i in range(10):
-    print(i)
+if x > 0:
+    return True
+else:
+    return False
 ```
 
----
-
-### Função principal e controle de fluxo
-
-**Código C:**
+#### C
 ```c
-int main() {
-    int x = 5;
-    if (x > 0) {
-        printf("positivo\n");
-    } else {
-        printf("negativo\n");
-    }
+if (x > 0) {
+    return 1;
+} else {
     return 0;
 }
 ```
 
-**Código Python:**
-```python
-def main():
-    x = 5
-    if x > 0:
-        print("positivo")
-    else:
-        print("negativo")
+---
 
-main()
+### 4. Laços de repetição - `while`
+
+#### Python
+```python
+i = 0
+while i < 10:
+    i = i + 1
+```
+
+#### C
+```c
+int i = 0;
+while (i < 10) {
+    i = i + 1;
+}
 ```
 
 ---
 
-### Entrada de dados
+### 5. Laços de repetição - `for in range()`
 
-**Código C:**
-```c
-int x;
-scanf("%d", &x);
+#### Python
+```python
+for i in range(5):
+    print(i)
 ```
 
-**Código Python:**
-```python
-x = int(input())
+#### C
+```c
+for (int i = 0; i < 5; i++) {
+    printf("%d\n", i);
+}
 ```
 
 ---
 
-### Array unidimensional (uso básico)
+### 6. Operações booleanas
 
-**Código C:**
-```c
-int nums[3] = {1, 2, 3};
+#### Python
+```python
+if x > 0 and y < 10:
+    return True
 ```
 
-**Código Python:**
+#### C
+```c
+if (x > 0 && y < 10) {
+    return 1;
+}
+```
+---
+
+## EXEMPLO COMPLETO
+
+### Python
 ```python
-nums = [1, 2, 3]
+def fatorial(n: int) -> int:
+    resultado = 1
+    while n > 1:
+        resultado = resultado * n
+        n = n - 1
+    return resultado
+```
+
+### C
+```c
+int fatorial(int n) {
+    int resultado = 1;
+    while (n > 1) {
+        resultado = resultado * n;
+        n = n - 1;
+    }
+    return resultado;
+}
 ```
