@@ -1,7 +1,7 @@
 # Compiladores-G4
 
 ## Sobre Projetos
-    Este projeto é um compilador que traduz código da linguagem C para Python.
+  Este projeto é um compilador que traduz código da linguagem Python para C.
 
 ## Execute o projeto
 
