@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+FILE *output;
+extern FILE *yyin;
 
 extern int yylex();
 void yyerror(const char *s);
@@ -36,9 +38,8 @@ program:
     ;
 
 function_stmt:
-    DEF ID LPAREN RPAREN COLON suite {
-        printf("Function '%s' parsed successfully.\n", $2);
-        printf("void %s() {\n%s\n}\n", $2, $6);
+    DEF ID LPAREN RPAREN COLON {
+    	fprintf(output, "void %s (){\n", $2);
     }
     ;
 
@@ -86,7 +87,30 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro de sintaxe: %s\n", s);
 }
 
-int main() {
-    printf("Starting parser...\n");
-    return yyparse();
+int main(int arc, char **argv) {
+
+	if (arc < 2) {
+		fprintf(stderr, "Uso: %s <arquivo_de_entrada>\n", argv[0]);
+		return 1;
+	}
+
+	FILE *input = fopen(argv[1], "r");
+	if (input == NULL) {
+		fprintf(stderr, "Erro ao abrir o arquivo de entrada: %s\n", argv[1]);
+		return 1;
+		}
+
+		output = fopen("output.c", "w");
+		if (output == NULL) {
+				fprintf(stderr, "Erro ao abrir o arquivo de saída.\n");
+				fclose(input);
+				return 1;
+		}
+
+		yyin = input;
+
+		yyparse();
+		fclose(input);
+		fclose(output);
+    return 0;
 }
