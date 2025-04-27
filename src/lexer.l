@@ -2,10 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-void yyerror(const char *s) {
-    fprintf(stderr, "Erro: %s\n", s);
-}
+#include "parser.tab.h"  // Incluindo os tokens gerados pelo Bison
 
 %}
 
@@ -13,54 +10,53 @@ void yyerror(const char *s) {
 
 %%
 
-"def"                { printf("TOKEN: 'def' - Palavra-chave\n"); }
-"return"             { printf("TOKEN: 'return' - Palavra-chave\n"); }
-"if"                 { printf("TOKEN: 'if' - Palavra-chave\n"); }
-"else"               { printf("TOKEN: 'else' - Palavra-chave\n"); }
-"while"              { printf("TOKEN: 'while' - Palavra-chave\n"); }
-"for"                { printf("TOKEN: 'for' - Palavra-chave\n"); }
-"in"                 { printf("TOKEN: 'in' - Palavra-chave\n"); }
-"range"              { printf("TOKEN: 'range' - Palavra-chave\n"); }
-"True"               { printf("TOKEN: 'True' - Literal booleano\n"); }
-"False"              { printf("TOKEN: 'False' - Literal booleano\n"); }
+"def"                { return DEF; }
+"return"             { return RETURN; }
+"if"                 { return IF; }
+"else"               { return ELSE; }
+"while"              { return WHILE; }
+"for"                { return FOR; }
+"in"                 { return IN; }
+"range"              { return RANGE; }
+"True"               { return TRUE; }
+"False"              { return FALSE; }
 
-[0-9]+               { printf("TOKEN: '%s' - Literal inteiro\n", yytext); }
-[0-9]+"."[0-9]+     { printf("TOKEN: '%s' - Literal flutuante\n", yytext); }
+[0-9]+               { yylval.ival = atoi(yytext); return INT; }
+[0-9]+"."[0-9]+      { yylval.fval = atof(yytext); return FLOAT; }
 
-[A-Za-z_][A-Za-z0-9_]* { printf("TOKEN: '%s' - Identificador\n", yytext); }
+[A-Za-z_][A-Za-z0-9_]* {
+    yylval.id = strdup(yytext);
+    return ID;
+}
 
-"+"                   { printf("TOKEN: '+' - Operador\n"); }
-"-"                   { printf("TOKEN: '-' - Operador\n"); }
-"*"                   { printf("TOKEN: '*' - Operador\n"); }
-"/"                   { printf("TOKEN: '/' - Operador\n"); }
-"%"                   { printf("TOKEN: '%%' - Operador\n"); }
-"=="                  { printf("TOKEN: '==' - Operador de comparação\n"); }
-"!="                  { printf("TOKEN: '!=' - Operador de comparação\n"); }
-"<"                   { printf("TOKEN: '<' - Operador de comparação\n"); }
-">"                   { printf("TOKEN: '>' - Operador de comparação\n"); }
-"<="                  { printf("TOKEN: '<=' - Operador de comparação\n"); }
-">="                  { printf("TOKEN: '>=' - Operador de comparação\n"); }
-"="                   { printf("TOKEN: '=' - Atribuição\n"); }
+"=="                  { return EQ; }
+"!="                  { return NE; }
+"<"                   { return LT; }
+">"                   { return GT; }
+"<="                  { return LE; }
+">="                  { return GE; }
+"="                   { return ASSIGN; }
 
-"and"                 { printf("TOKEN: 'and' - Operador lógico\n"); }
-"or"                  { printf("TOKEN: 'or' - Operador lógico\n"); }
-"not"                 { printf("TOKEN: 'not' - Operador lógico\n"); }
+"and"                 { return AND; }
+"or"                  { return OR; }
+"not"                 { return NOT; }
 
-"("                   { printf("TOKEN: '(' - Delimitador\n"); }
-")"                   { printf("TOKEN: ')' - Delimitador\n"); }
-"{"                   { printf("TOKEN: '{' - Delimitador\n"); }
-"}"                   { printf("TOKEN: '}' - Delimitador\n"); }
-","                   { printf("TOKEN: ',' - Delimitador\n"); }
-":"                   { printf("TOKEN: ':' - Delimitador\n"); }
-";"                   { printf("TOKEN: ';' - Delimitador\n"); }
+"+"                   { return PLUS; }
+"-"                   { return MINUS; }
+"*"                   { return TIMES; }
+"/"                   { return DIVIDE; }
+"%"                   { return MOD; }
+
+"("                   { return LPAREN; }
+")"                   { return RPAREN; }
+"{"                   { return LBRACE; }
+"}"                   { return RBRACE; }
+","                   { return COMMA; }
+":"                   { return COLON; }
+";"                   { return SEMICOLON; }
 
 [ \t\n\r]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
 
-.                     { printf("TOKEN: '%s' - Caractere desconhecido\n", yytext); }
+.                     { printf("Caractere desconhecido: %s\n", yytext); }
 
 %%
-
-int main() {
-    yylex();  
-    return 0;
-}
