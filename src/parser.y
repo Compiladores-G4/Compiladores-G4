@@ -1,5 +1,4 @@
-%{
-#include <stdio.h>
+%{ #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,9 +26,8 @@ void yyerror(const char *s);
 	var_t var;
 }
 
-%token DEF RETURN IF ELSE WHILE FOR IN RANGE TRUE FALSE
-%token <string> INT
-%token <string> FLOAT
+%token DEF RETURN IF ELSE WHILE FOR IN RANGE
+%token <string> INT FLOAT TRUE FALSE
 %token <string> ID
 %token EQ NE LT GT LE GE ASSIGN
 %token AND OR NOT
@@ -74,8 +72,10 @@ variable_declaration:
 		}
 	;
 value:
-	INT 		{ $$ = (var_t){ .value = yylval.string, .type = "int"}; 		} 	|
-	FLOAT 	{ $$ = (var_t){ .value = yylval.string, .type = "float"}; 	}
+	INT 		{ $$ = (var_t){ .value = yylval.string, .type = "int"}; 		} |
+	FLOAT 	{ $$ = (var_t){ .value = yylval.string, .type = "float"}; 	}	|
+	TRUE		{ $$ = (var_t){ .value = "1", .type = "int"}; } 							|
+	FALSE		{ $$ = (var_t){ .value = "0", .type = "int"}; } 	
 	;
 	
 %%
