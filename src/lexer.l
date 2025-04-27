@@ -6,9 +6,8 @@
 
 %}
 
-%option noyywrap
-
 %%
+
 
 "def"                { return DEF; }
 "return"             { return RETURN; }
@@ -21,11 +20,15 @@
 "True"               { return TRUE; }
 "False"              { return FALSE; }
 
-[0-9]+               { yylval.ival = atoi(yytext); return INT; }
-[0-9]+"."[0-9]+      { yylval.fval = atof(yytext); return FLOAT; }
+"int" 							 { return TYPE_INT; }
+"float" 						 { return TYPE_FLOAT; }
+"bool" 							 { return TYPE_BOOL; }
+
+[0-9]+               { yylval.string = strdup(yytext); return INT; }
+[0-9]+"."[0-9]+      { yylval.string = strdup(yytext); return FLOAT; }
 
 [A-Za-z_][A-Za-z0-9_]* {
-    yylval.id = strdup(yytext);
+    yylval.string = strdup(yytext);
     return ID;
 }
 
@@ -36,6 +39,8 @@
 "<="                  { return LE; }
 ">="                  { return GE; }
 "="                   { return ASSIGN; }
+
+"->"									{ return ARROW; }
 
 "and"                 { return AND; }
 "or"                  { return OR; }
@@ -55,9 +60,11 @@
 ":"                   { return COLON; }
 ";"                   { return SEMICOLON; }
 
-[ \t\n\r]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
+[\t] { return INDENT; }
 
-.                     { printf("Caractere desconhecido: %s\n", yytext); }
+[ \r\n]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
+
+.                    { printf("Caractere desconhecido: %c\n", yytext); }
 
 %%
 

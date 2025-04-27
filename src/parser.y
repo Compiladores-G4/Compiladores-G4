@@ -3,84 +3,81 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 FILE *output;
 extern FILE *yyin;
 
 extern int yylex();
 void yyerror(const char *s);
 
+
 %}
 
+%code requires {
+	typedef struct {
+		char *value;
+		char *type;
+		char *name;
+	} var_t;
+
+}
+
 %union {
-    char* id;
-    int ival;
-    float fval;
+	char* string;
+	var_t var;
 }
 
 %token DEF RETURN IF ELSE WHILE FOR IN RANGE TRUE FALSE
-%token <ival> INT
-%token <fval> FLOAT
-%token <id> ID
+%token <string> INT
+%token <string> FLOAT
+%token <string> ID
 %token EQ NE LT GT LE GE ASSIGN
 %token AND OR NOT
 %token PLUS MINUS TIMES DIVIDE MOD
 %token LPAREN RPAREN LBRACE RBRACE COMMA COLON SEMICOLON
+%token INDENT DEDENT
+%token ARROW
+%token TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <id> function_stmt suite statement expression
+%type <string> function_stmt statements statement 
+
+%type <var> variable_declaration value
 
 
 %%
 
 program:
-    function_stmt {
-        printf("Program parsed successfully.\n");
-    }
-    ;
+	statements |
+	function_stmt
+	;
 
 function_stmt:
-    DEF ID LPAREN RPAREN COLON {
-    	fprintf(output, "void %s (){\n", $2);
-    }
-    ;
-
-suite:
-    statement {
-        printf("Suite parsed.\n");
-    }
-    ;
+	DEF ID LPAREN RPAREN COLON INDENT statements {
+		fprintf(output, "void %s (){\n", $2);
+		fprintf(output, "%s", $7);
+		fprintf(output, "}\n", $2);
+	}
+	;
+statements:
+	statements statement |
+	statement
+	;
 
 statement:
-    RETURN expression {
-        $$ = strdup("");
-        printf("Return statement parsed: return %s;\n", $2);
-    }
-    | expression {
-        printf("Expression statement parsed: %s;\n", $1);
-    }
-    ;
+	variable_declaration { } |
+	RETURN { $$ = "return;\n"; }
+	;
 
-expression:
-    INT        { asprintf(&$$, "%d", $1); printf("Integer parsed: %d\n", $1); }
-    | FLOAT    { asprintf(&$$, "%f", $1); printf("Float parsed: %f\n", $1); }
-    | ID       { asprintf(&$$, "%s", $1); printf("Identifier parsed: %s\n", $1); }
-    | expression PLUS expression {
-        asprintf(&$$, "%s + %s", $1, $3);
-        printf("Addition parsed: %s + %s\n", $1, $3);
-    }
-    | expression MINUS expression {
-        asprintf(&$$, "%s - %s", $1, $3);
-        printf("Subtraction parsed: %s - %s\n", $1, $3);
-    }
-    | expression TIMES expression {
-        asprintf(&$$, "%s * %s", $1, $3);
-        printf("Multiplication parsed: %s * %s\n", $1, $3);
-    }
-    | expression DIVIDE expression {
-        asprintf(&$$, "%s / %s", $1, $3);
-        printf("Division parsed: %s / %s\n", $1, $3);
-    }
-    ;
-
+variable_declaration:
+		ID ASSIGN value	{ 
+			fprintf(output, "%s %s = %s;\n", $3.type, $1, $3.value);
+		}
+	;
+value:
+	INT 		{ $$ = (var_t){ .value = yylval.string, .type = "int"}; 		} 	|
+	FLOAT 	{ $$ = (var_t){ .value = yylval.string, .type = "float"}; 	}
+	;
+	
 %%
 
 void yyerror(const char *s) {
