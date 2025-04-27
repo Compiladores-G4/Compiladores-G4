@@ -1,3 +1,4 @@
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,4 +68,3 @@
 .                    { printf("Caractere desconhecido: %c\n", yytext); }
 
 %%
-
