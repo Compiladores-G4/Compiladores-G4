@@ -5,10 +5,42 @@
 #include <string.h>
 #include "parser.tab.h"  // Incluindo os tokens gerados pelo Bison
 
+int indent_level = 0;
+int current_line_indent = 0;
+
 %}
+
+%x STARTLINE
 
 %%
 
+
+\n { current_line_indent = 0; BEGIN(STARTLINE); printf("startline\n"); }
+<STARTLINE>[ \t]+ { printf("TAB"); current_line_indent++; }
+<STARTLINE>\n { printf("QUEBRADELINHA\n"); current_line_indent = 0; }
+<STARTLINE>. {
+	 unput(*yytext);
+	 if (current_line_indent > indent_level) {
+		 indent_level++;
+			printf("INDENT\n");
+		 return INDENT;
+	 } else if (current_line_indent < indent_level) {
+		 indent_level--;
+			printf("DEDENT\n");
+		 return DEDENT;
+	 } else {
+		 printf("INITIAL\n");
+		 BEGIN (INITIAL);
+	 }
+}
+<<EOF>> {
+	printf(("EOF\n"));
+	if (indent_level > 0) {
+		indent_level--;
+		return DEDENT;
+	}
+	return 0;
+}
 
 "def"                { return DEF; }
 "return"             { return RETURN; }
@@ -61,10 +93,6 @@
 ":"                   { return COLON; }
 ";"                   { return SEMICOLON; }
 
-[\t] { return INDENT; }
-
-[ \r\n]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
-
-.                    { printf("Caractere desconhecido: %c\n", yytext); }
+[ ]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
 
 %%

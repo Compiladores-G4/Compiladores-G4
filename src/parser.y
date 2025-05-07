@@ -46,11 +46,15 @@ void yyerror(const char *s);
 
 program:
 	statements |
-	function_stmt
+	function_stmts
 	;
 
+function_stmts:
+	function_stmts function_stmt |
+	function_stmt
+	;
 function_stmt:
-	DEF ID LPAREN RPAREN COLON INDENT statements {
+	DEF ID LPAREN RPAREN COLON INDENT statements DEDENT {
 		fprintf(output, "void %s (){\n", $2);
 		fprintf(output, "%s", $7);
 		fprintf(output, "}\n", $2);
