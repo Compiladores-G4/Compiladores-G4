@@ -27,7 +27,7 @@ void yyerror(const char *s);
 }
 
 %token DEF RETURN IF ELSE WHILE FOR IN RANGE
-%token <string> INT FLOAT TRUE FALSE
+%token <string> NUM TRUE FALSE
 %token <string> ID
 %token EQ NE LT GT LE GE ASSIGN
 %token AND OR NOT
@@ -41,6 +41,7 @@ void yyerror(const char *s);
 
 %type <var> variable_declaration value
 
+%type <intValue> expr
 
 %%
 
@@ -55,9 +56,7 @@ function_stmts:
 	;
 function_stmt:
 	DEF ID LPAREN RPAREN COLON INDENT statements DEDENT {
-		fprintf(output, "void %s (){\n", $2);
-		fprintf(output, "%s", $7);
-		fprintf(output, "}\n");
+	
 	}
 	;
 statements:
@@ -67,22 +66,33 @@ statements:
 
 statement:
 	variable_declaration { } |
-	RETURN { $$ = "return;\n"; }
+	RETURN { }
 	;
 
 variable_declaration:
 		ID ASSIGN value	{ 
-			fprintf(output, "%s %s = %s;\n", $3.type, $1, $3.value);
-			inserirSimbolo($1, $3.type);
+			
 		}
 	;
-value:
-	INT 		{ $$ = (var_t){ .value = yylval.string, .type = "int"}; 		} |
-	FLOAT 	{ $$ = (var_t){ .value = yylval.string, .type = "float"}; 	}	|
-	TRUE		{ $$ = (var_t){ .value = "1", .type = "int"}; } 							|
-	FALSE		{ $$ = (var_t){ .value = "0", .type = "int"}; } 	
-	;
 	
+value:
+    | TRUE     {   }
+    | FALSE    {   }
+    | expr     {
+                
+              }
+    ;
+	
+expr:
+      expr PLUS expr    { }
+    | expr MINUS expr   { }
+    | expr TIMES expr   { }
+    | expr DIVIDE expr  { }
+    | LPAREN expr RPAREN{ }
+    | NUM               { }
+	| ID                { }
+    ;
+
 %%
 
 void yyerror(const char *s) {

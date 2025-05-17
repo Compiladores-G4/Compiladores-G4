@@ -57,8 +57,8 @@ int current_line_indent = 0;
 "float" 						 { return TYPE_FLOAT; }
 "bool" 							 { return TYPE_BOOL; }
 
-[0-9]+               { yylval.string = strdup(yytext); return INT; }
-[0-9]+"."[0-9]+      { yylval.string = strdup(yytext); return FLOAT; }
+[0-9]+               { yylval.string = strdup(yytext); return NUM; }
+[0-9]+"."[0-9]+      { yylval.string = strdup(yytext); return NUM; }
 
 [A-Za-z_][A-Za-z0-9_]* {
     yylval.string = strdup(yytext);
