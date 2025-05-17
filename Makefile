@@ -18,11 +18,14 @@ $(BISON_C) $(BISON_H): $(BISON_FILE)
 	bison -d -o $(BISON_C) $(BISON_FILE)
 
 $(FLEX_C): $(FLEX_FILE)
-	flex -d -o $(FLEX_C) $(FLEX_FILE)
+	flex -o $(FLEX_C) $(FLEX_FILE)
 
 $(EXEC): $(BISON_C) $(FLEX_C)
-	gcc -Isrc -o $(EXEC) $(BISON_C) $(FLEX_C) src/tabela.c -lfl
+	gcc -Isrc -o $(EXEC) $(BISON_C) $(FLEX_C) $(SRC)/tabela.c $(SRC)/ast.c -lfl
 
 clean:
 	rm -rf $(OBJ)/*.o $(OBJ)/*.c $(OBJ)/*.h $(EXEC)
+
+run: $(EXEC)
+	./$(EXEC) input.txt
 

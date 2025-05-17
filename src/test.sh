@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Compilar o programa
-gcc -o analise parser.tab.c lex.yy.c -lfl
+gcc -o analise src/parser.tab.c obj/lexer.c src/tabela.c src/ast.c -Isrc -lfl
 
 # Verificar se o arquivo de entrada existe
 if [ ! -f input.txt ]; then
