@@ -1,14 +1,14 @@
-%{ #include <stdio.h>
+%{ 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "tabela.h"
 
 FILE *output;
 extern FILE *yyin;
 
 extern int yylex();
 void yyerror(const char *s);
-
 
 %}
 
@@ -57,7 +57,7 @@ function_stmt:
 	DEF ID LPAREN RPAREN COLON INDENT statements DEDENT {
 		fprintf(output, "void %s (){\n", $2);
 		fprintf(output, "%s", $7);
-		fprintf(output, "}\n", $2);
+		fprintf(output, "}\n");
 	}
 	;
 statements:
@@ -73,6 +73,7 @@ statement:
 variable_declaration:
 		ID ASSIGN value	{ 
 			fprintf(output, "%s %s = %s;\n", $3.type, $1, $3.value);
+			inserirSimbolo($1, $3.type);
 		}
 	;
 value:
@@ -113,5 +114,6 @@ int main(int arc, char **argv) {
 		yyparse();
 		fclose(input);
 		fclose(output);
+		imprimirTabela();
     return 0;
 }
