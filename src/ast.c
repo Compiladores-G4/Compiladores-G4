@@ -219,6 +219,27 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
     break;
   case NO_IF:
     printf("If:\n");
+    if (raiz->condicao) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Condição:\n");
+      imprimirASTDetalhada(raiz->condicao, nivel + 2);
+    }
+    if (raiz->esquerda) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Bloco Then:\n");
+      imprimirASTDetalhada(raiz->esquerda, nivel + 2);
+    }
+    if (raiz->direita) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Bloco Else:\n");
+      imprimirASTDetalhada(raiz->direita, nivel + 2);
+    }
     break;
   case NO_WHILE:
     printf("While:\n");

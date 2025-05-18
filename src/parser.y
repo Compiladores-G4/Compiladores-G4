@@ -51,7 +51,7 @@ char* determinarTipo(char *valor) {
 %token ARROW
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <ast> expr variable_declaration value statement statements program
+%type <ast> expr variable_declaration value statement statements program conditional_stmt
 
 %%
 
@@ -84,6 +84,16 @@ statements:
 statement:
 	variable_declaration { $$ = $1; }
 	| RETURN { $$ = criarNoOp('r', NULL, NULL); }
+	| conditional_stmt { $$ = $1; }
+	;
+
+conditional_stmt:
+	IF expr COLON INDENT statements DEDENT {
+		$$ = criarNoIf($2, $5, NULL);
+	}
+	| IF expr COLON INDENT statements DEDENT ELSE COLON INDENT statements DEDENT {
+		$$ = criarNoIf($2, $5, $10);
+	}
 	;
 
 variable_declaration:
@@ -104,12 +114,20 @@ expr:
 | expr MINUS expr   			{ $$ = criarNoOp('-', $1, $3); }
 | expr TIMES expr   			{ $$ = criarNoOp('*', $1, $3); }
 | expr DIVIDE expr  			{ $$ = criarNoOp('/', $1, $3); }
+| expr EQ expr     			{ $$ = criarNoOp('=', $1, $3); }
+| expr NE expr     			{ $$ = criarNoOp('!', $1, $3); }
+| expr LT expr     			{ $$ = criarNoOp('<', $1, $3); }
+| expr GT expr     			{ $$ = criarNoOp('>', $1, $3); }
+| expr LE expr     			{ $$ = criarNoOp('l', $1, $3); }
+| expr GE expr     			{ $$ = criarNoOp('g', $1, $3); }
 | LPAREN expr RPAREN			{ $$ = $2; }
 | NUM               			{ $$ = criarNoNum($1); }
 | ID                			{ 
 														$$ = criarNoId($1);
 														inserirSimbolo($1, "int");
 													}
+| TRUE              			{ $$ = criarNoNum(1); }
+| FALSE             			{ $$ = criarNoNum(0); }
 	;
     
 %%
