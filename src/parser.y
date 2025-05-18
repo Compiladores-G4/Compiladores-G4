@@ -9,16 +9,14 @@
 FILE *output;
 extern FILE *yyin;
 
-NoAST *raiz = NULL; // Raiz da AST
+NoAST *raiz = NULL; 
 
 extern int yylex();
 void yyerror(const char *s);
 
-// Função para determinar o tipo com base no valor
 char* determinarTipo(char *valor) {
     if (valor == NULL) return "desconhecido";
     if (strcmp(valor, "TRUE") == 0 || strcmp(valor, "FALSE") == 0) return "bool";
-    // Verificar se é um número inteiro ou de ponto flutuante
     char *endptr;
     strtol(valor, &endptr, 10);
     if (*endptr == '\0') return "int";
@@ -99,7 +97,6 @@ else_part:
 		$$ = $4;
 	}
 	| ELIF expr COLON INDENT statements DEDENT else_part {
-		/* Representa elif como um if dentro do bloco else */
 		$$ = criarNoIf($2, $5, $7);
 	}
 	;

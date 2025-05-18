@@ -51,8 +51,8 @@ NoAST *criarNoIf(NoAST *condicao, NoAST *entao, NoAST *senao) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_IF;
   novo->condicao = condicao;
-  novo->esquerda = entao; // Bloco "então"
-  novo->direita = senao;  // Bloco "senão" (pode ser NULL)
+  novo->esquerda = entao;
+  novo->direita = senao; 
   novo->corpo = NULL;
   novo->proximoIrmao = NULL;
   return novo;
@@ -72,10 +72,8 @@ NoAST *criarNoDeclaracao(char *tipo, char *nome, NoAST *inicializacao) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_DECLARACAO;
   strcpy(novo->nome, nome);
-  // Tipo é armazenado no operador para simplicidade
-  // Poderia ser melhorado com um campo específico para tipo
-  novo->operador = tipo[0];      // 'i' para int, 'f' para float, etc.
-  novo->direita = inicializacao; // Expressão de inicialização (pode ser NULL)
+  novo->operador = tipo[0];      
+  novo->direita = inicializacao;
   novo->esquerda = novo->condicao = novo->corpo = NULL;
   novo->proximoIrmao = NULL;
   return novo;
@@ -85,9 +83,9 @@ NoAST *criarNoFuncao(char *tipo, char *nome, NoAST *parametros, NoAST *corpo) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_FUNCAO;
   strcpy(novo->nome, nome);
-  novo->operador = tipo[0];    // Tipo de retorno
-  novo->esquerda = parametros; // Lista de parâmetros
-  novo->corpo = corpo;         // Bloco de código
+  novo->operador = tipo[0];
+  novo->esquerda = parametros; 
+  novo->corpo = corpo;  
   novo->direita = novo->condicao = NULL;
   novo->proximoIrmao = NULL;
   return novo;
@@ -97,7 +95,7 @@ NoAST *criarNoChamada(char *nome, NoAST *argumentos) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_CHAMADA;
   strcpy(novo->nome, nome);
-  novo->esquerda = argumentos; // Lista de argumentos
+  novo->esquerda = argumentos;
   novo->direita = novo->condicao = novo->corpo = NULL;
   novo->proximoIrmao = NULL;
   return novo;
@@ -106,7 +104,7 @@ NoAST *criarNoChamada(char *nome, NoAST *argumentos) {
 NoAST *criarNoBloco(NoAST *declaracoes) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_BLOCO;
-  novo->esquerda = declaracoes; // Primeiro elemento da lista
+  novo->esquerda = declaracoes;
   novo->direita = novo->condicao = novo->corpo = NULL;
   novo->proximoIrmao = NULL;
   return novo;
@@ -186,7 +184,6 @@ void imprimirAST(NoAST *raiz) {
       break;
     }
 
-    // Imprimir irmãos (para listas)
     if (raiz->proximoIrmao) {
       printf(", ");
       imprimirAST(raiz->proximoIrmao);
@@ -198,12 +195,10 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
   if (!raiz)
     return;
 
-  // Indentação
   for (int i = 0; i < nivel; i++) {
     printf("  ");
   }
 
-  // Imprime informações do nó atual
   switch (raiz->tipo) {
   case NO_NUMERO:
     printf("Número: %d\n", raiz->valor);
@@ -258,7 +253,6 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
     break;
   }
 
-  // Visita filhos recursivamente
   if (raiz->esquerda)
     imprimirASTDetalhada(raiz->esquerda, nivel + 1);
   if (raiz->direita)
@@ -268,7 +262,6 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
   if (raiz->corpo)
     imprimirASTDetalhada(raiz->corpo, nivel + 1);
 
-  // Visita irmãos no mesmo nível
   if (raiz->proximoIrmao)
     imprimirASTDetalhada(raiz->proximoIrmao, nivel);
 }
@@ -277,7 +270,6 @@ void liberarAST(NoAST *raiz) {
   if (!raiz)
     return;
 
-  // Libera todos os nós recursivamente
   liberarAST(raiz->esquerda);
   liberarAST(raiz->direita);
   liberarAST(raiz->condicao);

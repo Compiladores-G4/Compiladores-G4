@@ -34,7 +34,6 @@ int main(int arc, char **argv) {
 
   yyparse();
 
-  // Processar a AST gerada
   if (raiz != NULL) {
     fprintf(stdout, "AST gerada com sucesso!\n");
     imprimirASTDetalhada(raiz, 0);
@@ -46,7 +45,6 @@ int main(int arc, char **argv) {
   fclose(output);
   imprimirTabela();
 
-  // Liberar a memória utilizada pela AST
   if (raiz != NULL) {
     liberarAST(raiz);
   }
