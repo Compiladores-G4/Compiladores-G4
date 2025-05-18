@@ -5,13 +5,15 @@
 #define TAM_TIPO 32
 
 typedef struct Simbolo {
-    char nome[TAM_NOME];
-    char tipo[TAM_TIPO];
-    struct Simbolo *prox;
+  char nome[TAM_NOME];
+  char tipo[TAM_TIPO];
+  void *valor;
+  struct Simbolo *prox;
 } Simbolo;
 
 void inserirSimbolo(char *nome, char *tipo);
 Simbolo *buscarSimbolo(char *nome);
 void imprimirTabela();
+void atualizarSimboloValor(char *nome, void *valor);
 
 #endif // TABELA_H
