@@ -1,6 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdio.h>
 #include "tipos.h"
 
 // Funções básicas de criação de nós
@@ -24,5 +25,8 @@ NoAST *adicionarIrmao(NoAST *node, NoAST *irmao);
 void imprimirAST(NoAST *raiz);
 void imprimirASTDetalhada(NoAST *raiz, int nivel);
 void liberarAST(NoAST *raiz);
+
+// Nova função: Gera código C a partir da AST
+void gerarCodigoC(NoAST *raiz, FILE *saida);
 
 #endif

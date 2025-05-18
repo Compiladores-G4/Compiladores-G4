@@ -55,38 +55,46 @@ char* determinarTipo(char *valor) {
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL
 
 %type <string> function_stmt statements statement  // Mantemos para compatibilidade com o código existente
+%type <string> param_list param while_stmt for_stmt condition function_call
 
 %type <var> variable_declaration value       // Mantemos para compatibilidade com o código existente
 
-%type <intValue> expr                       // Mantemos para compatibilidade com o código existente
+%type <intValue> expr expr_list arg_list     // Mantemos para compatibilidade com o código existente
 
 // Novos tipos para a AST
-%type <ast> ast_program ast_function_stmt ast_statements ast_statement ast_variable_declaration ast_value ast_expr
+%type <ast> ast_function_stmts ast_function_stmt ast_statements ast_statement 
+%type <ast> ast_variable_declaration ast_value ast_expr
+%type <ast> ast_param_list ast_param ast_function_call ast_expr_list ast_arg_list
+%type <ast> ast_while_stmt ast_for_stmt ast_condition ast_block
 
 %%
 
 program:
-	statements |
-	function_stmts
-	;
-
-// Regras para construção da AST (executadas em paralelo com as regras tradicionais)
-ast_program:
 	ast_statements { 
 		raiz = $1; 
-		$$ = raiz;
 	} |
-	ast_function_stmt { 
+	ast_function_stmts { 
 		raiz = $1; 
-		$$ = raiz;
 	}
 	;
 
-function_stmts:
-	function_stmts function_stmt |
-	function_stmt
+ast_function_stmts:
+	ast_function_stmts ast_function_stmt {
+		$$ = adicionarIrmao($1, $2);
+	} |
+	ast_function_stmt {
+		$$ = $1;
+	}
 	;
+
 function_stmt:
+	DEF ID LPAREN param_list RPAREN COLON INDENT statements DEDENT {
+		// Adicionar função na tabela de símbolos
+		inserirSimbolo($2, "function");
+		fprintf(output, "void %s(%s) {\n%s\n}\n", $2, $4 ? $4 : "", $8);
+		
+		// Criar o nó AST para a função - não conectado com a AST real ainda
+	} |
 	DEF ID LPAREN RPAREN COLON INDENT statements DEDENT {
 		// Adicionar função na tabela de símbolos
 		inserirSimbolo($2, "function");
@@ -103,6 +111,89 @@ function_stmt:
 		}
 	}
 	;
+
+// Regra AST para declaração de função
+ast_function_stmt:
+	DEF ID LPAREN ast_param_list RPAREN COLON INDENT ast_statements DEDENT {
+		// Criar nó de função com parâmetros
+		$$ = criarNoFuncao("void", $2, $4, $8);
+	} |
+	DEF ID LPAREN RPAREN COLON INDENT ast_statements DEDENT {
+		// Criar nó de função sem parâmetros
+		$$ = criarNoFuncao("void", $2, NULL, $7);
+	}
+	;
+
+param_list:
+	param_list COMMA param {
+		char *result = malloc(strlen($1) + strlen($3) + 3);
+		sprintf(result, "%s, %s", $1, $3);
+		$$ = result;
+	} |
+	param {
+		$$ = $1;
+	} |
+	/* vazio */ {
+		$$ = strdup("");
+	}
+	;
+
+// Regra AST para lista de parâmetros
+ast_param_list:
+	ast_param_list COMMA ast_param {
+		$$ = adicionarIrmao($1, $3);
+	} |
+	ast_param {
+		$$ = $1;
+	} |
+	/* vazio */ {
+		$$ = NULL;
+	}
+	;
+
+param:
+	ID COLON TYPE_INT {
+		inserirSimbolo($1, "int");
+		$$ = strdup("int ");
+		strcat($$, $1);
+	} |
+	ID COLON TYPE_FLOAT {
+		inserirSimbolo($1, "float");
+		$$ = strdup("float ");
+		strcat($$, $1);
+	} |
+	ID COLON TYPE_BOOL {
+		inserirSimbolo($1, "bool");
+		$$ = strdup("bool ");
+		strcat($$, $1);
+	} |
+	ID {
+		inserirSimbolo($1, "auto");
+		$$ = strdup("auto ");
+		strcat($$, $1);
+	}
+	;
+
+// Regra AST para parâmetro
+ast_param:
+	ID COLON TYPE_INT {
+		inserirSimbolo($1, "int");
+		$$ = criarNoDeclaracao("int", $1, NULL);
+	} |
+	ID COLON TYPE_FLOAT {
+		inserirSimbolo($1, "float");
+		$$ = criarNoDeclaracao("float", $1, NULL);
+	} |
+	ID COLON TYPE_BOOL {
+		inserirSimbolo($1, "bool");
+		$$ = criarNoDeclaracao("bool", $1, NULL);
+	} |
+	ID {
+		inserirSimbolo($1, "auto");
+		$$ = criarNoDeclaracao("auto", $1, NULL);
+	}
+	;
+
 statements:
 	statements statement {
 		// Concatenar os statements
@@ -132,6 +223,15 @@ statement:
 	RETURN { 
 		fprintf(output, "return;\n");
 		$$ = strdup("return;");
+	} |
+	while_stmt {
+		$$ = $1;
+	} |
+	for_stmt {
+		$$ = $1;
+	} |
+	function_call {
+		$$ = strdup("");
 	}
 	;
 
@@ -143,6 +243,166 @@ ast_statement:
 	RETURN {
 		// Nó para return sem valor
 		$$ = criarNoOp('r', NULL, NULL); // Usando 'r' como operador para return
+	} |
+	RETURN ast_expr {
+		// Nó para return com um valor
+		$$ = criarNoOp('r', $2, NULL); // Usando 'r' como operador para return com valor
+	} |
+	ast_while_stmt {
+		$$ = $1;
+	} |
+	ast_for_stmt {
+		$$ = $1;
+	} |
+	ast_function_call {
+		$$ = $1;
+	}
+	;
+
+// Nova regra para while
+while_stmt:
+	WHILE condition COLON INDENT statements DEDENT {
+		// Gerar código C para while
+		fprintf(output, "while (%s) {\n%s\n}\n", $2, $5);
+		$$ = strdup("");
+	}
+	;
+
+// Regra AST para while
+ast_while_stmt:
+	WHILE ast_condition COLON INDENT ast_statements DEDENT {
+		// Criar nó para o laço while
+		$$ = criarNoWhile($2, $5);
+	}
+	;
+
+// Nova regra para for-in-range
+for_stmt:
+	FOR ID IN RANGE LPAREN expr RPAREN COLON INDENT statements DEDENT {
+		// Gerar código C para o for
+		fprintf(output, "for (int %s = 0; %s < %s; %s++) {\n%s\n}\n", 
+				$2, $2, $6, $2, $10);
+		$$ = strdup("");
+	} |
+	FOR ID IN RANGE LPAREN expr COMMA expr RPAREN COLON INDENT statements DEDENT {
+		// For com início e fim especificados
+		fprintf(output, "for (int %s = %s; %s < %s; %s++) {\n%s\n}\n", 
+				$2, $6, $2, $8, $2, $12);
+		$$ = strdup("");
+	}
+	;
+
+// Regra AST para for-in-range
+ast_for_stmt:
+	FOR ID IN RANGE LPAREN ast_expr RPAREN COLON INDENT ast_statements DEDENT {
+		// Criar nós para um for simples (0 até <expr>)
+		NoAST *id_node = criarNoId($2);
+		NoAST *inicio = criarNoNum(0);
+		NoAST *atrib_init = criarNoAtribuicao(id_node, inicio);
+		
+		NoAST *id_cond = criarNoId($2);
+		NoAST *cond = criarNoOp('<', id_cond, $6);
+		
+		NoAST *id_incr = criarNoId($2);
+		NoAST *um = criarNoNum(1);
+		NoAST *incr = criarNoOp('+', id_incr, um);
+		NoAST *atrib_incr = criarNoAtribuicao(criarNoId($2), incr);
+		
+		// Criar bloco para for (inicialização, condição, incremento, corpo)
+		NoAST *bloco = criarNoBloco($10);
+		
+		// Implementar como um "while" especial com inicialização e incremento
+		NoAST *corpo_completo = adicionarIrmao($10, atrib_incr);
+		
+		// Simular um "for" usando um bloco que contém a inicialização e um while
+		NoAST *while_node = criarNoWhile(cond, corpo_completo);
+		$$ = adicionarIrmao(atrib_init, while_node);
+	}
+	;
+
+// Nova regra para condição
+condition:
+	expr {
+		$$ = $1;
+	}
+	;
+
+// Regra AST para condição
+ast_condition:
+	ast_expr {
+		$$ = $1;
+	}
+	;
+
+// Nova regra para bloco de código
+ast_block:
+	INDENT ast_statements DEDENT {
+		$$ = criarNoBloco($2);
+	}
+	;
+
+// Nova regra para chamada de função
+function_call:
+	ID LPAREN arg_list RPAREN {
+		// Verificar se a função existe
+		Simbolo *s = buscarSimbolo($1);
+		if (!s) {
+			fprintf(stderr, "Erro semântico: Função '%s' não declarada\n", $1);
+		}
+		
+		// Gerar código para chamada de função
+		fprintf(output, "%s(%s);\n", $1, $3 ? $3 : "");
+		$$ = strdup("");
+	}
+	;
+
+// Regra AST para chamada de função
+ast_function_call:
+	ID LPAREN ast_arg_list RPAREN {
+		// Criar nó para chamada de função
+		$$ = criarNoChamada($1, $3);
+	}
+	;
+
+// Nova regra para lista de argumentos
+arg_list:
+	expr_list {
+		$$ = $1;
+	} |
+	/* vazio */ {
+		$$ = strdup("");
+	}
+	;
+
+// Regra AST para lista de argumentos
+ast_arg_list:
+	ast_expr_list {
+		$$ = $1;
+	} |
+	/* vazio */ {
+		$$ = NULL;
+	}
+	;
+
+// Nova regra para lista de expressões
+expr_list:
+	expr_list COMMA expr {
+		char *result = malloc(strlen($1) + strlen($3) + 3);
+		sprintf(result, "%s, %s", $1, $3);
+		$$ = result;
+	} |
+	expr {
+		$$ = $1;
+	}
+	;
+
+// Regra AST para lista de expressões
+ast_expr_list:
+	ast_expr_list COMMA ast_expr {
+		$$ = adicionarIrmao($1, $3);
+	} |
+	ast_expr {
+		$$ = $1;
 	}
 	;
 
@@ -204,6 +464,12 @@ expr:
     | expr MINUS expr   { $$ = strdup("expr - expr"); }
     | expr TIMES expr   { $$ = strdup("expr * expr"); }
     | expr DIVIDE expr  { $$ = strdup("expr / expr"); }
+    | expr LT expr      { $$ = strdup("expr < expr"); }
+    | expr GT expr      { $$ = strdup("expr > expr"); }
+    | expr LE expr      { $$ = strdup("expr <= expr"); }
+    | expr GE expr      { $$ = strdup("expr >= expr"); }
+    | expr EQ expr      { $$ = strdup("expr == expr"); }
+    | expr NE expr      { $$ = strdup("expr != expr"); }
     | LPAREN expr RPAREN{ $$ = $2; }
     | NUM               { $$ = $1; }
     | ID                { 
@@ -214,6 +480,7 @@ expr:
         }
         $$ = $1;
       }
+    | function_call     { $$ = strdup("function_call"); }
     ;
     
 // Versão AST para expressões
@@ -230,6 +497,24 @@ ast_expr:
     | ast_expr DIVIDE ast_expr {
         $$ = criarNoOp('/', $1, $3);
     }
+    | ast_expr LT ast_expr {
+        $$ = criarNoOp('<', $1, $3);
+    }
+    | ast_expr GT ast_expr {
+        $$ = criarNoOp('>', $1, $3);
+    }
+    | ast_expr LE ast_expr {
+        $$ = criarNoOp('L', $1, $3); // L para '≤'
+    }
+    | ast_expr GE ast_expr {
+        $$ = criarNoOp('G', $1, $3); // G para '≥'
+    }
+    | ast_expr EQ ast_expr {
+        $$ = criarNoOp('=', $1, $3); // = para '=='
+    }
+    | ast_expr NE ast_expr {
+        $$ = criarNoOp('!', $1, $3); // ! para '!='
+    }
     | LPAREN ast_expr RPAREN {
         $$ = $2;
     }
@@ -239,12 +524,17 @@ ast_expr:
     | ID {
         $$ = criarNoId($1);
     }
+    | ast_function_call {
+        $$ = $1;
+    }
     ;
 
 %%
 
+// Melhorando o sistema de mensagens de erro no parser
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro de sintaxe: %s\n", s);
+    extern int yylineno;
+    fprintf(stderr, "Erro de sintaxe na linha %d: %s\n", yylineno, s);
 }
 
 int main(int arc, char **argv) {
@@ -274,9 +564,17 @@ int main(int arc, char **argv) {
 	// Processar a AST gerada
 	if (raiz != NULL) {
 		fprintf(stdout, "AST gerada com sucesso!\n");
+		fprintf(stdout, "Gerando código C a partir da AST...\n");
+		
+		// Imprimir a AST para fins de debug
 		imprimirASTDetalhada(raiz, 0);
+		
+		// Gerar código C a partir da AST
+		gerarCodigoC(raiz, output);
+		
+		fprintf(stdout, "Código C gerado com sucesso!\n");
 	} else {
-		fprintf(stderr, "Aviso: AST não foi gerada completamente\n");
+		fprintf(stderr, "Erro: AST não foi gerada\n");
 	}
 	
 	fclose(input);

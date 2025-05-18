@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "tabela.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -261,4 +262,181 @@ void liberarAST(NoAST *raiz) {
     liberarAST(raiz->proximoIrmao);
     
     free(raiz);
+}
+
+// Função auxiliar para gerar o tipo C a partir do operador usado na AST
+char* obterTipoC(char operador) {
+    switch(operador) {
+        case 'i': return "int";
+        case 'f': return "float";
+        case 'b': return "bool";
+        case 'v': return "void";
+        default: return "int";  // Tipo padrão
+    }
+}
+
+// Função para gerar código a partir dos parâmetros de função
+void gerarParametros(NoAST *param, FILE *saida) {
+    if (!param) return;
+    
+    // Gera o tipo e o nome do parâmetro
+    fprintf(saida, "%s %s", obterTipoC(param->operador), param->nome);
+    
+    // Se houver mais parâmetros, adicione uma vírgula e continue
+    if (param->proximoIrmao) {
+        fprintf(saida, ", ");
+        gerarParametros(param->proximoIrmao, saida);
+    }
+}
+
+// Função para gerar código a partir dos argumentos de chamada de função
+void gerarArgumentos(NoAST *arg, FILE *saida) {
+    if (!arg) return;
+    
+    // Gera o código para o argumento atual
+    gerarCodigoC(arg, saida);
+    
+    // Se houver mais argumentos, adicione uma vírgula e continue
+    if (arg->proximoIrmao) {
+        fprintf(saida, ", ");
+        gerarArgumentos(arg->proximoIrmao, saida);
+    }
+}
+
+// Gera código C a partir da AST
+void gerarCodigoC(NoAST *raiz, FILE *saida) {
+    if (!raiz) return;
+    
+    switch(raiz->tipo) {
+        case NO_NUMERO:
+            fprintf(saida, "%d", raiz->valor);
+            break;
+            
+        case NO_ID:
+            fprintf(saida, "%s", raiz->nome);
+            break;
+            
+        case NO_OPERADOR:
+            if (raiz->operador == 'r') {  // Return
+                if (raiz->esquerda) {
+                    fprintf(saida, "return ");
+                    gerarCodigoC(raiz->esquerda, saida);
+                    fprintf(saida, ";\n");
+                } else {
+                    fprintf(saida, "return;\n");
+                }
+            } else {
+                fprintf(saida, "(");
+                gerarCodigoC(raiz->esquerda, saida);
+                
+                // Traduzir operadores
+                switch(raiz->operador) {
+                    case '+': fprintf(saida, " + "); break;
+                    case '-': fprintf(saida, " - "); break;
+                    case '*': fprintf(saida, " * "); break;
+                    case '/': fprintf(saida, " / "); break;
+                    case '<': fprintf(saida, " < "); break;
+                    case '>': fprintf(saida, " > "); break;
+                    case 'L': fprintf(saida, " <= "); break;  // L para '≤'
+                    case 'G': fprintf(saida, " >= "); break;  // G para '≥'
+                    case '=': fprintf(saida, " == "); break;  // = para '=='
+                    case '!': fprintf(saida, " != "); break;  // ! para '!='
+                    default:  fprintf(saida, " %c ", raiz->operador);
+                }
+                
+                gerarCodigoC(raiz->direita, saida);
+                fprintf(saida, ")");
+            }
+            break;
+            
+        case NO_ATRIBUICAO:
+            // Para atribuições, primeiro verifica se é a primeira vez que a variável é usada
+            // Se for, adiciona o tipo antes
+            {
+                char *nome = raiz->esquerda->nome;
+                Simbolo *s = buscarSimbolo(nome);
+                if (s) {
+                    // Variável já existe, simplesmente atribui
+                    gerarCodigoC(raiz->esquerda, saida);
+                    fprintf(saida, " = ");
+                    gerarCodigoC(raiz->direita, saida);
+                    fprintf(saida, ";\n");
+                } else {
+                    // Nova variável, infere o tipo com base no valor atribuído
+                    fprintf(saida, "int ");  // Tipo padrão, poderia ser melhorado com inferência de tipo
+                    gerarCodigoC(raiz->esquerda, saida);
+                    fprintf(saida, " = ");
+                    gerarCodigoC(raiz->direita, saida);
+                    fprintf(saida, ";\n");
+                    
+                    // Adiciona à tabela de símbolos
+                    inserirSimbolo(nome, "int");  // Tipo padrão
+                }
+            }
+            break;
+            
+        case NO_IF:
+            fprintf(saida, "if (");
+            gerarCodigoC(raiz->condicao, saida);
+            fprintf(saida, ") {\n");
+            gerarCodigoC(raiz->esquerda, saida);  // Bloco "então"
+            fprintf(saida, "}\n");
+            
+            if (raiz->direita) {  // Bloco "senão"
+                fprintf(saida, "else {\n");
+                gerarCodigoC(raiz->direita, saida);
+                fprintf(saida, "}\n");
+            }
+            break;
+            
+        case NO_WHILE:
+            fprintf(saida, "while (");
+            gerarCodigoC(raiz->condicao, saida);
+            fprintf(saida, ") {\n");
+            gerarCodigoC(raiz->corpo, saida);
+            fprintf(saida, "}\n");
+            break;
+            
+        case NO_DECLARACAO:
+            fprintf(saida, "%s %s", obterTipoC(raiz->operador), raiz->nome);
+            
+            if (raiz->direita) {  // Se tem inicialização
+                fprintf(saida, " = ");
+                gerarCodigoC(raiz->direita, saida);
+            }
+            
+            fprintf(saida, ";\n");
+            break;
+            
+        case NO_FUNCAO:
+            // Adicionar à tabela de símbolos
+            inserirSimbolo(raiz->nome, "function");
+            
+            // Gerar cabeçalho da função
+            fprintf(saida, "%s %s(", obterTipoC(raiz->operador), raiz->nome);
+            
+            // Gerar parâmetros
+            gerarParametros(raiz->esquerda, saida);
+            
+            // Gerar corpo da função
+            fprintf(saida, ") {\n");
+            gerarCodigoC(raiz->corpo, saida);
+            fprintf(saida, "}\n\n");
+            break;
+            
+        case NO_CHAMADA:
+            fprintf(saida, "%s(", raiz->nome);
+            gerarArgumentos(raiz->esquerda, saida);
+            fprintf(saida, ")");
+            break;
+            
+        case NO_BLOCO:
+            gerarCodigoC(raiz->esquerda, saida);
+            break;
+    }
+    
+    // Processa nós irmãos
+    if (raiz->proximoIrmao) {
+        gerarCodigoC(raiz->proximoIrmao, saida);
+    }
 }

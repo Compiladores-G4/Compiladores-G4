@@ -1,8 +1,8 @@
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
 #include "parser.tab.h"  // Incluindo os tokens gerados pelo Bison
 
 int indent_level = 0;
@@ -10,31 +10,30 @@ int current_line_indent = 0;
 
 %}
 
+%option yylineno
+
 %x STARTLINE
 
 %%
 
 
-\n { current_line_indent = 0; BEGIN(STARTLINE); printf("startline\n"); }
-<STARTLINE>[ \t]+ { printf("TAB"); current_line_indent++; }
-<STARTLINE>\n { printf("QUEBRADELINHA\n"); current_line_indent = 0; }
+\n { current_line_indent = 0; BEGIN(STARTLINE); }
+<STARTLINE>[ ]+ { current_line_indent += yyleng; }
+<STARTLINE>\t  { current_line_indent += 4; /* Considera um tab equivalente a 4 espaços */ }
+<STARTLINE>\n { current_line_indent = 0; /* Linha em branco, ignora */ }
 <STARTLINE>. {
-	 unput(*yytext);
-	 if (current_line_indent > indent_level) {
-		 indent_level++;
-			printf("INDENT\n");
-		 return INDENT;
-	 } else if (current_line_indent < indent_level) {
-		 indent_level--;
-			printf("DEDENT\n");
-		 return DEDENT;
-	 } else {
-		 printf("INITIAL\n");
-		 BEGIN (INITIAL);
-	 }
+    unput(*yytext);
+    if (current_line_indent > indent_level * 4) {
+        indent_level++;
+        return INDENT;
+    } else if (current_line_indent < indent_level * 4) {
+        indent_level--;
+        return DEDENT;
+    } else {
+        BEGIN(INITIAL);
+    }
 }
 <<EOF>> {
-	printf(("EOF\n"));
 	if (indent_level > 0) {
 		indent_level--;
 		return DEDENT;
@@ -93,6 +92,8 @@ int current_line_indent = 0;
 ":"                   { return COLON; }
 ";"                   { return SEMICOLON; }
 
-[ ]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
+#.*             { /* Ignorar comentários de linha */ }
+
+[ \t]+            { /* Ignorar espaços e tabs (exceto para indentação) */ }
 
 %%
