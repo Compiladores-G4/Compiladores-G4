@@ -1,4 +1,3 @@
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +40,7 @@ int current_line_indent = 0;
 "def"                { return DEF; 		}
 "return"             { return RETURN; }
 "if"                 { return IF; 		}
+"elif"               { return ELIF; 	}
 "else"               { return ELSE; 	}
 "while"              { return WHILE; 	}
 "for"                { return FOR; 		}

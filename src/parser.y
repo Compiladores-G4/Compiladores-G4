@@ -39,7 +39,7 @@ char* determinarTipo(char *valor) {
 	NoAST* ast;    // Ponteiro para nós da AST
 }
 
-%token DEF RETURN IF ELSE WHILE FOR IN RANGE
+%token DEF RETURN IF ELSE ELIF WHILE FOR IN RANGE
 %token <string> TRUE FALSE
 %token <intValue> NUM
 %token <string> ID
@@ -51,7 +51,7 @@ char* determinarTipo(char *valor) {
 %token ARROW
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt
+%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part
 
 %%
 
@@ -88,11 +88,19 @@ statement:
 	;
 
 conditional_stmt:
-	IF expr COLON INDENT statements DEDENT {
-		$$ = criarNoIf($2, $5, NULL);
+	IF expr COLON INDENT statements DEDENT else_part {
+		$$ = criarNoIf($2, $5, $7);
 	}
-	| IF expr COLON INDENT statements DEDENT ELSE COLON INDENT statements DEDENT {
-		$$ = criarNoIf($2, $5, $10);
+	;
+
+else_part:
+	/* vazio */ { $$ = NULL; }
+	| ELSE COLON INDENT statements DEDENT {
+		$$ = $4;
+	}
+	| ELIF expr COLON INDENT statements DEDENT else_part {
+		/* Representa elif como um if dentro do bloco else */
+		$$ = criarNoIf($2, $5, $7);
 	}
 	;
 
