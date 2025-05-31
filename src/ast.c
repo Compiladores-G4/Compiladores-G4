@@ -244,6 +244,20 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
     break;
   case NO_FUNCAO:
     printf("Função: %c %s\n", raiz->operador, raiz->nome);
+    if (raiz->esquerda) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Parâmetros:\n");
+      imprimirASTDetalhada(raiz->esquerda, nivel + 2);
+    }
+    if (raiz->corpo) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Corpo:\n");
+      imprimirASTDetalhada(raiz->corpo, nivel + 2);
+    }
     break;
   case NO_CHAMADA:
     printf("Chamada: %s\n", raiz->nome);

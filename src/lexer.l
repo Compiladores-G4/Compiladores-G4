@@ -46,14 +46,15 @@ int current_line_indent = 0;
 "for"                { return FOR; 		}
 "in"                 { return IN; 		}
 "range"              { return RANGE; 	}
-"True"               { return TRUE; 	}
-"False"              { return FALSE; 	}
+"True"               { yylval.string = strdup(yytext); return TRUE; }
+"False"              { yylval.string = strdup(yytext); return FALSE; }
 
 "int" 							 { return TYPE_INT; 	}
 "float" 						 { return TYPE_FLOAT; }
 "bool" 							 { return TYPE_BOOL; 	}
 
 [0-9]+               { yylval.intValue = atoi(yytext); return NUM; }
+[0-9]+\.[0-9]+       { yylval.string = strdup(yytext); return FLOAT_NUM; }
 
 [A-Za-z_][A-Za-z0-9_]* {
     yylval.string = strdup(yytext);
