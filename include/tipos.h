@@ -9,6 +9,7 @@ typedef enum {
   NO_ATRIBUICAO,
   NO_IF,
   NO_WHILE,
+  NO_FOR,          // Adicionando o tipo NO_FOR para loops for
   NO_DECLARACAO,
   NO_FUNCAO,
   NO_CHAMADA,

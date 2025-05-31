@@ -12,6 +12,7 @@ NoAST *criarNoOp(char operador, NoAST *esq, NoAST *dir);
 NoAST *criarNoAtribuicao(NoAST *id, NoAST *expressao);
 NoAST *criarNoIf(NoAST *condicao, NoAST *entao, NoAST *senao);
 NoAST *criarNoWhile(NoAST *condicao, NoAST *corpo);
+NoAST *criarNoFor(NoAST *variavel, NoAST *inicio, NoAST *fim, NoAST *passo, NoAST *corpo);
 NoAST *criarNoDeclaracao(char *tipo, char *nome, NoAST *inicializacao);
 NoAST *criarNoFuncao(char *tipo, char *nome, NoAST *parametros, NoAST *corpo);
 NoAST *criarNoChamada(char *nome, NoAST *argumentos);

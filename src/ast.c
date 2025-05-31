@@ -68,6 +68,18 @@ NoAST *criarNoWhile(NoAST *condicao, NoAST *corpo) {
   return novo;
 }
 
+NoAST *criarNoFor(NoAST *variavel, NoAST *inicio, NoAST *fim, NoAST *passo, NoAST *corpo) {
+  NoAST *novo = malloc(sizeof(NoAST));
+  novo->tipo = NO_FOR;
+  novo->operador = 'f';
+  novo->esquerda = variavel;  // Variável de iteração
+  novo->direita = inicio;     // Valor inicial
+  novo->condicao = fim;       // Valor final/condição limite
+  novo->proximoIrmao = passo; // Passo da iteração (para range(inicio, fim, passo))
+  novo->corpo = corpo;        // Corpo do loop
+  return novo;
+}
+
 NoAST *criarNoDeclaracao(char *tipo, char *nome, NoAST *inicializacao) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = NO_DECLARACAO;
@@ -159,6 +171,22 @@ void imprimirAST(NoAST *raiz) {
       printf(") ");
       imprimirAST(raiz->corpo);
       break;
+    case NO_FOR:
+      printf("for (");
+      imprimirAST(raiz->esquerda);
+      printf(" = ");
+      imprimirAST(raiz->direita);
+      printf("; ");
+      imprimirAST(raiz->condicao);
+      printf("; ");
+      if (raiz->proximoIrmao) {
+        imprimirAST(raiz->proximoIrmao);
+      } else {
+        printf("++"); // Incremento padrão se não especificado
+      }
+      printf(") ");
+      imprimirAST(raiz->corpo);
+      break;
     case NO_DECLARACAO:
       printf("%c %s", raiz->operador, raiz->nome);
       if (raiz->direita) {
@@ -238,6 +266,58 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
     break;
   case NO_WHILE:
     printf("While:\n");
+    if (raiz->condicao) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Condição:\n");
+      imprimirASTDetalhada(raiz->condicao, nivel + 2);
+    }
+    if (raiz->corpo) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Corpo:\n");
+      imprimirASTDetalhada(raiz->corpo, nivel + 2);
+    }
+    break;
+  case NO_FOR:
+    printf("For:\n");
+    if (raiz->esquerda) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Variável:\n");
+      imprimirASTDetalhada(raiz->esquerda, nivel + 2);
+    }
+    if (raiz->direita) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Início:\n");
+      imprimirASTDetalhada(raiz->direita, nivel + 2);
+    }
+    if (raiz->condicao) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Fim:\n");
+      imprimirASTDetalhada(raiz->condicao, nivel + 2);
+    }
+    if (raiz->proximoIrmao) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Passo:\n");
+      imprimirASTDetalhada(raiz->proximoIrmao, nivel + 2);
+    }
+    if (raiz->corpo) {
+      for (int i = 0; i < nivel + 1; i++) {
+        printf("  ");
+      }
+      printf("Corpo:\n");
+      imprimirASTDetalhada(raiz->corpo, nivel + 2);
+    }
     break;
   case NO_DECLARACAO:
     printf("Declaração: %c %s\n", raiz->operador, raiz->nome);

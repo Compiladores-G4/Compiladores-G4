@@ -220,130 +220,87 @@ int verificarDeclaracao(char *nome) {
 
 // Verifica compatibilidade entre tipos
 int tiposCompativeis(char *tipo1, char *tipo2) {
-  // Tipos iguais são sempre compatíveis
-  if (strcmp(tipo1, tipo2) == 0) {
-    return 1;
-  }
-  
-  // Se algum dos tipos é desconhecido, assume compatibilidade
+  // Se algum dos tipos for desconhecido, permitimos a operação
   if (strcmp(tipo1, "desconhecido") == 0 || strcmp(tipo2, "desconhecido") == 0) {
     return 1;
   }
   
-  // Regras de conversão implícita
+  // Tipos idênticos são compatíveis
+  if (strcmp(tipo1, tipo2) == 0) {
+    return 1;
+  }
+  
+  // int e float são compatíveis entre si
   if ((strcmp(tipo1, "int") == 0 && strcmp(tipo2, "float") == 0) ||
       (strcmp(tipo1, "float") == 0 && strcmp(tipo2, "int") == 0)) {
     return 1;
   }
   
-  return 0;
-}
-
-// Verifica se uma atribuição tem tipos compatíveis
-int verificarAtribuicao(char *destino, char *origem) {
-  Simbolo *destino_s = buscarSimbolo(destino);
-  Simbolo *origem_s = buscarSimbolo(origem);
-  
-  // Se ambos os símbolos existem, verifica a compatibilidade de tipos
-  if (destino_s && origem_s) {
-    if (!tiposCompativeis(destino_s->tipo, origem_s->tipo)) {
-      printf("Erro semântico: atribuição incompatível de '%s' (%s) para '%s' (%s)\n", 
-             origem, origem_s->tipo, destino, destino_s->tipo);
-      return 0;
-    }
+  // bool é compatível com int (0 = falso, não-zero = verdadeiro)
+  if ((strcmp(tipo1, "bool") == 0 && strcmp(tipo2, "int") == 0) ||
+      (strcmp(tipo1, "int") == 0 && strcmp(tipo2, "bool") == 0)) {
     return 1;
   }
   
-  // Se o símbolo de destino não existe, é um erro
-  if (!destino_s) {
-    printf("Erro semântico: variável '%s' usada sem declaração prévia\n", destino);
-    return 0;
-  }
-  
-  // Se o símbolo de origem não existe, é um erro
-  if (!origem_s) {
-    printf("Erro semântico: variável '%s' usada sem declaração prévia\n", origem);
-    return 0;
-  }
-  
+  // Outros casos não são compatíveis
   return 0;
 }
 
-// Obtem o tipo resultante de uma operação entre dois tipos
-char* obterTipoResultante(char *tipo1, char *tipo2, char operador) {
-  // Se algum dos tipos é desconhecido, o resultado é desconhecido
-  if (strcmp(tipo1, "desconhecido") == 0 || strcmp(tipo2, "desconhecido") == 0) {
-    return "desconhecido";
-  }
-  
-  // Para operadores relacionais (==, !=, <, >, <=, >=), o tipo resultante é sempre bool
-  if (operador == '=' || operador == '!' || operador == '<' || 
-      operador == '>' || operador == 'l' || operador == 'g') {
-    return "bool";
-  }
-  
-  // Para operações aritméticas entre tipos numéricos
-  if ((strcmp(tipo1, "int") == 0 || strcmp(tipo1, "float") == 0) &&
-      (strcmp(tipo2, "int") == 0 || strcmp(tipo2, "float") == 0)) {
-    // Se qualquer operando for float, o resultado é float
-    if (strcmp(tipo1, "float") == 0 || strcmp(tipo2, "float") == 0) {
-      return "float";
-    } else {
-      return "int";
-    }
-  }
-  
-  // Operações booleanas entre booleanos resultam em bool
-  if (strcmp(tipo1, "bool") == 0 && strcmp(tipo2, "bool") == 0) {
-    return "bool";
-  }
-  
-  // Operação inválida
-  printf("Erro semântico: operação inválida entre tipos '%s' e '%s' com operador '%c'\n",
-         tipo1, tipo2, operador);
-  return "erro";
-}
-
-// Verifica a validade de uma operação entre dois símbolos
+// Verifica se uma operação entre dois símbolos é permitida
 int verificarOperacao(char *nome1, char *nome2, char operador) {
   Simbolo *s1 = buscarSimbolo(nome1);
   Simbolo *s2 = buscarSimbolo(nome2);
   
-  // Verifica se ambos os símbolos estão declarados
-  if (!s1) {
-    printf("Erro semântico: variável '%s' usada sem declaração prévia\n", nome1);
+  if (!s1 || !s2) {
+    return 0; // Um dos símbolos não foi encontrado
+  }
+  
+  // Para operações lógicas (==, !=, <, >, <=, >=)
+  if (operador == '=' || operador == '!' || operador == '<' || operador == '>' || operador == 'l' || operador == 'g') {
+    return tiposCompativeis(s1->tipo, s2->tipo);
+  }
+  
+  // Para operações aritméticas (+, -, *, /)
+  if (operador == '+' || operador == '-' || operador == '*' || operador == '/') {
+    // Verificar se ambos são numéricos (int ou float)
+    if ((strcmp(s1->tipo, "int") == 0 || strcmp(s1->tipo, "float") == 0) &&
+        (strcmp(s2->tipo, "int") == 0 || strcmp(s2->tipo, "float") == 0)) {
+      return 1;
+    }
     return 0;
   }
-  if (!s2) {
-    printf("Erro semântico: variável '%s' usada sem declaração prévia\n", nome2);
-    return 0;
+  
+  return 0; // Operador desconhecido
+}
+
+// Determina o tipo resultante de uma operação
+char* obterTipoResultante(char *tipo1, char *tipo2, char operador) {
+  // Para operações lógicas, o resultado é bool
+  if (operador == '=' || operador == '!' || operador == '<' || operador == '>' || operador == 'l' || operador == 'g') {
+    return "bool";
   }
   
-  // Para operadores lógicos, ambos os operandos devem ser booleanos
-  if (operador == '&' || operador == '|') { // AND, OR
-    if (strcmp(s1->tipo, "bool") != 0 || strcmp(s2->tipo, "bool") != 0) {
-      printf("Erro semântico: operador lógico '%c' requer operandos booleanos\n", operador);
-      return 0;
+  // Para operações aritméticas
+  if (operador == '+' || operador == '-' || operador == '*' || operador == '/') {
+    // Se algum dos operandos for float, o resultado é float
+    if (strcmp(tipo1, "float") == 0 || strcmp(tipo2, "float") == 0) {
+      return "float";
     }
-    return 1;
+    // Caso contrário, o resultado é int
+    return "int";
   }
   
-  // Para operadores aritméticos, ambos os operandos devem ser numéricos
-  if (operador == '+' || operador == '-' || operador == '*' || operador == '/' || operador == '%') {
-    if ((strcmp(s1->tipo, "int") != 0 && strcmp(s1->tipo, "float") != 0) || 
-        (strcmp(s2->tipo, "int") != 0 && strcmp(s2->tipo, "float") != 0)) {
-      printf("Erro semântico: operador '%c' requer operandos numéricos\n", operador);
-      return 0;
-    }
-    
-    // Operador % requer operandos inteiros
-    if (operador == '%' && (strcmp(s1->tipo, "int") != 0 || strcmp(s2->tipo, "int") != 0)) {
-      printf("Erro semântico: operador '%%' requer operandos inteiros\n");
-      return 0;
-    }
-    
-    return 1;
+  return "desconhecido"; // Operador desconhecido
+}
+
+// Verifica se uma atribuição é válida
+int verificarAtribuicao(char *destino, char *origem) {
+  Simbolo *dest = buscarSimbolo(destino);
+  Simbolo *orig = buscarSimbolo(origem);
+  
+  if (!dest || !orig) {
+    return 0; // Um dos símbolos não foi encontrado
   }
   
-  return 1;
+  return tiposCompativeis(dest->tipo, orig->tipo);
 }
