@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 Simbolo *tabela = NULL;
 Escopo *escopoAtual = NULL;
@@ -11,9 +12,16 @@ Escopo *escoposRaiz = NULL;
 void inicializarEscopos() {
   if (escoposRaiz == NULL) {
     escoposRaiz = malloc(sizeof(Escopo));
+    if (escoposRaiz == NULL) {
+      fprintf(stderr, "Erro: Falha na alocação de memória para escopo global\n");
+      exit(1);
+    }
     strcpy(escoposRaiz->nome, "global");
     escoposRaiz->pai = NULL;
     escoposRaiz->prox = NULL;
+    escoposRaiz->tipoRetorno = strdup("void"); // Escopo global não tem retorno
+    escoposRaiz->parametros = NULL;
+    escoposRaiz->numParametros = 0;
     escopoAtual = escoposRaiz;
   }
 }
@@ -25,9 +33,17 @@ void criarEscopo(char *nome) {
   }
   
   Escopo *novo = malloc(sizeof(Escopo));
+  if (novo == NULL) {
+    fprintf(stderr, "Erro: Falha na alocação de memória para escopo %s\n", nome);
+    return;
+  }
+  
   strcpy(novo->nome, nome);
   novo->pai = escopoAtual;
   novo->prox = NULL;
+  novo->tipoRetorno = strdup("void"); // Tipo de retorno padrão
+  novo->parametros = NULL;
+  novo->numParametros = 0;
   
   // Adicionar como próximo do último filho do escopo atual
   if (escopoAtual->prox == NULL) {
@@ -271,4 +287,162 @@ int verificarOperacao(char *nome1, char *nome2, char operador) {
   }
   
   return 1;
+}
+
+// Define o tipo de retorno para o escopo atual
+void definirTipoRetorno(char *tipo) {
+  if (escopoAtual == NULL) {
+    inicializarEscopos();
+  }
+  
+  if (escopoAtual->tipoRetorno != NULL) {
+    free(escopoAtual->tipoRetorno);
+  }
+  
+  escopoAtual->tipoRetorno = strdup(tipo);
+}
+
+// Verifica se o tipo de retorno é compatível com o escopo atual
+int verificarRetorno(char *tipo) {
+  if (escopoAtual == NULL) {
+    inicializarEscopos();
+    return 1; // No escopo global, qualquer retorno é válido
+  }
+  
+  // Se o tipo de retorno não foi definido, qualquer retorno é válido
+  if (escopoAtual->tipoRetorno == NULL) {
+    return 1;
+  }
+  
+  // Verifica compatibilidade
+  if (!tiposCompativeis(escopoAtual->tipoRetorno, tipo)) {
+    printf("Erro semântico: retorno incompatível. Esperado '%s', encontrado '%s'\n", 
+           escopoAtual->tipoRetorno, tipo);
+    return 0;
+  }
+  
+  return 1;
+}
+
+// Adiciona parâmetros a um escopo de função
+void adicionarParametros(int num, ...) {
+  if (escopoAtual == NULL) {
+    inicializarEscopos();
+    return;
+  }
+  
+  // Libera parâmetros anteriores se existirem
+  if (escopoAtual->parametros != NULL) {
+    for (int i = 0; i < escopoAtual->numParametros; i++) {
+      free(escopoAtual->parametros[i].nome);
+      free(escopoAtual->parametros[i].tipo);
+    }
+    free(escopoAtual->parametros);
+  }
+  
+  // Aloca novos parâmetros
+  escopoAtual->numParametros = num;
+  if (num > 0) {
+    escopoAtual->parametros = malloc(num * sizeof(Parametro));
+    if (escopoAtual->parametros == NULL) {
+      fprintf(stderr, "Erro: Falha na alocação de memória para parâmetros\n");
+      return;
+    }
+    
+    va_list args;
+    va_start(args, num);
+    
+    for (int i = 0; i < num; i++) {
+      char *nome = va_arg(args, char*);
+      char *tipo = va_arg(args, char*);
+      
+      escopoAtual->parametros[i].nome = strdup(nome);
+      escopoAtual->parametros[i].tipo = strdup(tipo);
+      
+      // Também insere o parâmetro na tabela de símbolos
+      inserirSimbolo(nome, tipo);
+    }
+    
+    va_end(args);
+  } else {
+    escopoAtual->parametros = NULL;
+  }
+}
+
+// Verifica se uma chamada de função tem o número correto de argumentos
+int verificarArgumentos(char *nomeFuncao, int numArgs) {
+  // Busca o escopo da função
+  Escopo *e = escoposRaiz;
+  while (e != NULL) {
+    if (strcmp(e->nome, nomeFuncao) == 0) {
+      if (e->numParametros != numArgs) {
+        printf("Erro semântico: número incorreto de argumentos para '%s'. Esperado %d, encontrado %d\n", 
+               nomeFuncao, e->numParametros, numArgs);
+        return 0;
+      }
+      return 1;
+    }
+    
+    // Verifica os filhos
+    Escopo *filho = e->prox;
+    while (filho != NULL) {
+      if (strcmp(filho->nome, nomeFuncao) == 0) {
+        if (filho->numParametros != numArgs) {
+          printf("Erro semântico: número incorreto de argumentos para '%s'. Esperado %d, encontrado %d\n", 
+                 nomeFuncao, filho->numParametros, numArgs);
+          return 0;
+        }
+        return 1;
+      }
+      filho = filho->prox;
+    }
+    
+    e = e->prox;
+  }
+  
+  // Função não encontrada
+  printf("Erro semântico: função '%s' não declarada\n", nomeFuncao);
+  return 0;
+}
+
+// Verifica se um tipo de argumento é compatível com o tipo esperado do parâmetro
+int verificarTipoArgumento(char *nomeFuncao, int indiceArg, char *tipoArg) {
+  // Busca o escopo da função
+  Escopo *e = escoposRaiz;
+  while (e != NULL) {
+    if (strcmp(e->nome, nomeFuncao) == 0) {
+      if (indiceArg >= e->numParametros) {
+        return 0; // Índice inválido
+      }
+      
+      if (!tiposCompativeis(e->parametros[indiceArg].tipo, tipoArg)) {
+        printf("Erro semântico: tipo incompatível para argumento %d de '%s'. Esperado '%s', encontrado '%s'\n", 
+               indiceArg + 1, nomeFuncao, e->parametros[indiceArg].tipo, tipoArg);
+        return 0;
+      }
+      return 1;
+    }
+    
+    // Verifica os filhos
+    Escopo *filho = e->prox;
+    while (filho != NULL) {
+      if (strcmp(filho->nome, nomeFuncao) == 0) {
+        if (indiceArg >= filho->numParametros) {
+          return 0; // Índice inválido
+        }
+        
+        if (!tiposCompativeis(filho->parametros[indiceArg].tipo, tipoArg)) {
+          printf("Erro semântico: tipo incompatível para argumento %d de '%s'. Esperado '%s', encontrado '%s'\n", 
+                 indiceArg + 1, nomeFuncao, filho->parametros[indiceArg].tipo, tipoArg);
+          return 0;
+        }
+        return 1;
+      }
+      filho = filho->prox;
+    }
+    
+    e = e->prox;
+  }
+  
+  return 0; // Função não encontrada
 }
