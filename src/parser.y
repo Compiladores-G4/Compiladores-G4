@@ -62,8 +62,7 @@ void inicializarCompilador() {
 %token ARROW
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts
-%type <tipo> expr_tipo
+%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt
 
 %%
 
@@ -112,6 +111,13 @@ statement:
 	variable_declaration { $$ = $1; }
 	| RETURN { $$ = criarNoOp('r', NULL, NULL); }
 	| conditional_stmt { $$ = $1; }
+	| while_stmt { $$ = $1; } // Adicione esta linha
+	;
+
+while_stmt:
+	WHILE expr COLON INDENT statements DEDENT {
+		$$ = criarNoWhile($2, $5);
+	}
 	;
 
 conditional_stmt:
@@ -245,60 +251,6 @@ expr:
     | FLOAT_NUM         			{ $$ = criarNoOp('f', NULL, NULL); /* Representando float */ }
 	;
 
-expr_tipo:
-    expr                        {
-                                  if ($1->tipo == NO_NUMERO) {
-                                      $$ = "int";
-                                  } else if ($1->tipo == NO_ID) {
-                                      Simbolo *s = buscarSimbolo($1->nome);
-                                      if (s) $$ = s->tipo;
-                                      else $$ = "desconhecido";
-                                  } else if ($1->tipo == NO_OPERADOR) {
-                                      switch($1->operador) {
-                                          case 'T':
-                                          case 'F':
-                                              $$ = "bool";
-                                              break;
-                                          case 'f':
-                                              $$ = "float";
-                                              break;
-                                          case '+':
-                                          case '-':
-                                          case '*':
-                                          case '/':
-                                              // Aqui precisaria verificar os tipos dos operandos
-                                              if ($1->esquerda && $1->direita) {
-                                                  char *tipo_esq = NULL;
-                                                  char *tipo_dir = NULL;
-                                                  
-                                                  if ($1->esquerda->tipo == NO_ID) {
-                                                      Simbolo *s = buscarSimbolo($1->esquerda->nome);
-                                                      if (s) tipo_esq = s->tipo;
-                                                  }
-                                                  
-                                                  if ($1->direita->tipo == NO_ID) {
-                                                      Simbolo *s = buscarSimbolo($1->direita->nome);
-                                                      if (s) tipo_dir = s->tipo;
-                                                  }
-                                                  
-                                                  if (tipo_esq && tipo_dir) {
-                                                      $$ = obterTipoResultante(tipo_esq, tipo_dir, $1->operador);
-                                                  } else {
-                                                      $$ = "desconhecido";
-                                                  }
-                                              } else {
-                                                  $$ = "desconhecido";
-                                              }
-                                              break;
-                                          default:
-                                              $$ = "desconhecido";
-                                      }
-                                  } else {
-                                      $$ = "desconhecido";
-                                  }
-                                }
-    ;
-    
 %%
 
 void yyerror(const char *s) {

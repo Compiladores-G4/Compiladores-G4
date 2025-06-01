@@ -1,4 +1,3 @@
-x = 10
-y = 10.0
-z = True
-a = False
+x = 1
+y = 2
+z = x + y

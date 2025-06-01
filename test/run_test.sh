@@ -11,8 +11,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Executa o compilador com o arquivo de teste
-echo "Executando teste com variables.py..."
-./bin/compilador test/variables.py
+cd test
 
-echo "Teste concluído!"
+for testfile in *.py; do
+    echo "Executando teste com $testfile..."
+    ../bin/compilador "$testfile" > "${testfile%.py}.out"
+    if [ -f ../codigo_intermediario.txt ]; then
+        cp ../codigo_intermediario.txt "${testfile%.py}_intermediario.txt"
+    fi
+    echo "Saída intermediária para $testfile:"
+    cat "${testfile%.py}_intermediario.txt"
+    echo "-----------------------------"
+done
+
+echo "Testes concluídos!"

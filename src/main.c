@@ -5,6 +5,7 @@
 #include "../obj/parser.tab.h"
 #include "ast.h"
 #include "tabela.h"
+#include "gerador.h"  // Incluímos o cabeçalho do gerador
 
 extern int yyparse(void);
 extern FILE *yyin;
@@ -48,6 +49,27 @@ int main(int arc, char **argv) {
       fprintf(stderr, "\nForam encontrados %d erro(s) semântico(s).\n", erros_semanticos);
     } else {
       fprintf(stdout, "\nNenhum erro semântico encontrado!\n");
+      
+      // Gerar código intermediário
+      CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
+      if (codigo != NULL) {
+        fprintf(stdout, "Código intermediário gerado com sucesso!\n");
+        imprimirCodigoIntermediario(codigo);
+        
+        // Opcionalmente, salvar o código intermediário em um arquivo
+        FILE *codInterFile = fopen("codigo_intermediario.txt", "w");
+        if (codInterFile != NULL) {
+          // Redirecionar stdout temporariamente para o arquivo
+          FILE *stdout_orig = stdout;
+          stdout = codInterFile;
+          imprimirCodigoIntermediario(codigo);
+          stdout = stdout_orig; // Restaurar stdout
+          fclose(codInterFile);
+        }
+        
+        // Liberar a memória do código intermediário
+        liberarCodigoIntermediario(codigo);
+      }
     }
   } else {
     fprintf(stderr, "Erro: AST não foi gerada corretamente. Código de erro: %d\n", parse_result);

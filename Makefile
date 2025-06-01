@@ -1,62 +1,45 @@
-SRC     = src
-INCLUDE = include
-OBJ     = obj
-BIN     = bin
+CC = gcc
+CFLAGS = -Wall -Wextra -I include
 
-BISON_FILE = $(SRC)/parser.y
-FLEX_FILE  = $(SRC)/lexer.l
+# Diretórios
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
+INCLUDE_DIR = include
 
-BISON_C = $(OBJ)/parser.tab.c
-BISON_H = $(OBJ)/parser.tab.h
-FLEX_C  = $(OBJ)/lexer.c
+# Arquivos fonte
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS)) $(OBJ_DIR)/parser.tab.o $(OBJ_DIR)/lexer.o
 
-OBJS = $(OBJ)/main.o \
-       $(OBJ)/parser.tab.o \
-       $(OBJ)/lexer.o \
-       $(OBJ)/ast.o \
-       $(OBJ)/tabela.o
+# Executável final
+TARGET = $(BIN_DIR)/compilador
 
-EXEC = $(BIN)/compilador
+# Regras
+all: directories $(TARGET)
 
-# Criação de diretórios automaticamente
-$(shell mkdir -p $(OBJ) $(BIN))
+directories:
+	mkdir -p $(OBJ_DIR) $(BIN_DIR)
 
-# Regra padrão
-all: $(EXEC)
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ -lfl
 
-# Geração dos arquivos do Bison
-$(BISON_C) $(BISON_H): $(BISON_FILE)
-	bison -d -o $(BISON_C) $(BISON_FILE)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Geração do arquivo do Flex
-$(FLEX_C): $(FLEX_FILE)
-	flex -o $(FLEX_C) $(FLEX_FILE)
+$(OBJ_DIR)/parser.tab.o: $(OBJ_DIR)/parser.tab.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compilação dos arquivos .c
-$(OBJ)/main.o: $(SRC)/main.c $(BISON_H)
-	gcc -I$(INCLUDE) -I$(SRC) -c $< -o $@
+$(OBJ_DIR)/lexer.o: $(OBJ_DIR)/lexer.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ)/parser.tab.o: $(BISON_C)
-	gcc -I$(INCLUDE) -I$(SRC) -c $< -o $@
+$(OBJ_DIR)/parser.tab.c $(OBJ_DIR)/parser.tab.h: $(SRC_DIR)/parser.y
+	bison -d -o $(OBJ_DIR)/parser.tab.c $<
 
-$(OBJ)/lexer.o: $(FLEX_C) $(BISON_H)
-	gcc -I$(INCLUDE) -I$(SRC) -c $< -o $@
+$(OBJ_DIR)/lexer.c: $(SRC_DIR)/lexer.l $(OBJ_DIR)/parser.tab.h
+	flex -o $@ $<
 
-$(OBJ)/ast.o: $(SRC)/ast.c $(INCLUDE)/ast.h
-	gcc -I$(INCLUDE) -I$(SRC) -c $< -o $@
-
-$(OBJ)/tabela.o: $(SRC)/tabela.c $(INCLUDE)/tabela.h
-	gcc -I$(INCLUDE) -I$(SRC) -c $< -o $@
-
-# Linkagem final
-$(EXEC): $(OBJS)
-	gcc -o $(EXEC) $^ -lfl
-
-# Limpeza
 clean:
-	rm -rf $(OBJ)/*.o $(OBJ)/*.c $(OBJ)/*.h $(EXEC)
+	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/* $(OBJ_DIR)/parser.tab.c $(OBJ_DIR)/parser.tab.h $(OBJ_DIR)/lexer.c
 
-# Execução do compilador
-run: $(EXEC)
-	./$(EXEC) input.txt
+.PHONY: all directories clean
 
