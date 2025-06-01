@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../obj/parser.tab.h"
 #include "ast.h"
 #include "tabela.h"
 #include "gerador.h"  // Incluímos o cabeçalho do gerador
