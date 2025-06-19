@@ -21,6 +21,9 @@ typedef enum {
     OP_GE,      // >=
     OP_EQ,      // ==
     OP_NE,      // !=
+    OP_AND,     // and
+    OP_OR,      // or
+    OP_NOT,     // not
     OP_PARAM,   // Parâmetro para função
     OP_CALL,    // Chamada de função
     OP_RETURN,  // Retorno de função
@@ -63,6 +66,7 @@ void gerarCodigoDeclaracao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoAtribuicao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no);
+void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoChamada(CodigoIntermediario *codigo, NoAST *no, char *resultado);
 

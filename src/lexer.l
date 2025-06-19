@@ -4,8 +4,12 @@
 #include <string.h>
 #include "parser.tab.h"  // Incluindo os tokens gerados pelo Bison
 
-int indent_level = 0;
+#define MAX_INDENT_STACK 50
+
+int indent_stack[MAX_INDENT_STACK];
+int indent_stack_ptr = 0;
 int current_line_indent = 0;
+int pending_dedents = 0;
 
 %}
 
@@ -13,28 +17,72 @@ int current_line_indent = 0;
 
 %%
 
-
-\n 										{ current_line_indent = 0; BEGIN(STARTLINE);  }
-<STARTLINE>[ \t]+ 		{  current_line_indent++; }
-<STARTLINE>\n 				{  current_line_indent = 0; }
-<STARTLINE>. {
-	 unput(*yytext);
-	 if (current_line_indent > indent_level) {
-		 indent_level++;
-		 return INDENT;
-	 } else if (current_line_indent < indent_level) {
-		 indent_level--;
-		 return DEDENT;
-	 } else {
-		 BEGIN (INITIAL);
-	 }
+\n {
+    current_line_indent = 0;
+    BEGIN(STARTLINE);
 }
+
+<STARTLINE>[ ] {
+    current_line_indent++;
+}
+
+<STARTLINE>\t {
+    current_line_indent += 4; // Tab vale 4 espaços
+}
+
+<STARTLINE>\n {
+    current_line_indent = 0;
+}
+
+<STARTLINE>. {
+    unput(*yytext);
+    
+    // Se há DEDENTs pendentes, retorne um por vez
+    if (pending_dedents > 0) {
+        pending_dedents--;
+        return DEDENT;
+    }
+    
+    // Se indentação aumentou
+    if (current_line_indent > indent_stack[indent_stack_ptr]) {
+        indent_stack[++indent_stack_ptr] = current_line_indent;
+        BEGIN(INITIAL);
+        return INDENT;
+    }
+    // Se indentação diminuiu
+    else if (current_line_indent < indent_stack[indent_stack_ptr]) {
+        // Encontrar o nível correspondente na pilha
+        while (indent_stack_ptr > 0 && indent_stack[indent_stack_ptr] > current_line_indent) {
+            indent_stack_ptr--;
+            pending_dedents++;
+        }
+        
+        // Verificar se a indentação corresponde a um nível válido
+        if (indent_stack[indent_stack_ptr] != current_line_indent) {
+            printf("Erro: indentação inconsistente\n");
+            return -1;
+        }
+        
+        if (pending_dedents > 0) {
+            pending_dedents--;
+            BEGIN(INITIAL);
+            return DEDENT;
+        }
+    }
+    
+    BEGIN(INITIAL);
+}
+
 <<EOF>> {
-	if (indent_level > 0) {
-		indent_level--;
-		return DEDENT;
-	}
-	return 0;
+    if (pending_dedents > 0) {
+        pending_dedents--;
+        return DEDENT;
+    }
+    if (indent_stack_ptr > 0) {
+        indent_stack_ptr--;
+        return DEDENT;
+    }
+    return 0;
 }
 
 "def"                { return DEF; 		}
@@ -46,6 +94,9 @@ int current_line_indent = 0;
 "for"                { return FOR; 		}
 "in"                 { return IN; 		}
 "range"              { return RANGE; 	}
+"and"                { return AND; }
+"or"                 { return OR; }
+"not"                { return NOT; }
 "True"               { yylval.string = strdup(yytext); return TRUE; }
 "False"              { yylval.string = strdup(yytext); return FALSE; }
 
@@ -70,10 +121,6 @@ int current_line_indent = 0;
 "="                   { return ASSIGN; }
 
 "->"									{ return ARROW; }
-
-"and"                 { return AND; }
-"or"                  { return OR; }
-"not"                 { return NOT; }
 
 "+"                   { return PLUS; }
 "-"                   { return MINUS; }

@@ -62,7 +62,18 @@ void inicializarCompilador() {
 %token ARROW
 %token <string> TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt parameter_list parameter
+// Definindo precedência dos operadores (menor para maior precedência)
+%left OR
+%left AND
+%right NOT
+%left EQ NE
+%left LT GT LE GE
+%left PLUS MINUS
+%left TIMES DIVIDE MOD
+%right UMINUS
+%left LPAREN RPAREN
+
+%type <ast> expr variable_declaration statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter
 %type <string> type_annotation
 
 %%
@@ -155,11 +166,27 @@ statement:
 	| RETURN expr { $$ = criarNoOp('r', $2, NULL); }
 	| conditional_stmt { $$ = $1; }
 	| while_stmt { $$ = $1; }
+	| for_stmt { $$ = $1; }
 	;
 
 while_stmt:
 	WHILE expr COLON INDENT statements DEDENT {
 		$$ = criarNoWhile($2, $5);
+	}
+	;
+
+for_stmt:
+	FOR ID IN RANGE LPAREN expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), criarNoNum(0), $6, criarNoNum(1), $10);
+	}
+	| FOR ID IN RANGE LPAREN expr COMMA expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), $6, $8, criarNoNum(1), $12);
+	}
+	| FOR ID IN RANGE LPAREN expr COMMA expr COMMA expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), $6, $8, $10, $14);
 	}
 	;
 
@@ -180,20 +207,28 @@ else_part:
 	;
 
 variable_declaration:
-	ID ASSIGN value { 
+	ID ASSIGN expr { 
 		NoAST *id_node = criarNoId($1);
 		$$ = criarNoAtribuicao(id_node, $3);
 		
-		// Inferir o tipo com base no valor e inserir na tabela de símbolos
+		// Para atribuições com expressões, inferir o tipo
 		char *tipo;
-		if ($3->tipo == NO_NUMERO) {
+		if ($3->tipo == NO_ID) {
+			// Se é atribuição de um ID, buscar o tipo desse ID
+			Simbolo *s = buscarSimbolo($3->nome);
+			if (s != NULL) {
+				tipo = s->tipo;
+			} else {
+				tipo = "int"; // Assumir int como padrão para variáveis de loop
+			}
+		} else if ($3->tipo == NO_NUMERO) {
 			tipo = "int";
 		} else if ($3->tipo == NO_OPERADOR && $3->operador == 'f') {
 			tipo = "float";
 		} else if ($3->tipo == NO_OPERADOR && ($3->operador == 'T' || $3->operador == 'F')) {
 			tipo = "bool";
 		} else {
-			tipo = "desconhecido";
+			tipo = "int"; // Assumir int como padrão
 		}
 		
 		// Verificar se é uma redeclaração com tipo diferente
@@ -209,15 +244,31 @@ variable_declaration:
 	}
 	;
 
-value:
-	TRUE     		{ $$ = criarNoOp('T', NULL, NULL); }
-	| FALSE    	    { $$ = criarNoOp('F', NULL, NULL); }
-	| expr			{ $$ = $1; }
-	| FLOAT_NUM     { $$ = criarNoOp('f', NULL, NULL); /* Representando float */ }
-	;
-
 expr:
-	expr PLUS expr    			{ 
+	expr AND expr   			{ 
+                                  $$ = criarNoOp('&', $1, $3); 
+                                  if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
+                                      verificarOperacao($1->nome, $3->nome, '&');
+                                  }
+                                }
+    | expr OR expr      			{ 
+                                  $$ = criarNoOp('|', $1, $3); 
+                                  if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
+                                      verificarOperacao($1->nome, $3->nome, '|');
+                                  }
+                                }
+    | NOT expr          			{ 
+                                  $$ = criarNoOp('~', $2, NULL); 
+                                  if ($2->tipo == NO_ID) {
+                                      // Verificar se o operando é válido para NOT
+                                      Simbolo *s = buscarSimbolo($2->nome);
+                                      if (s != NULL && strcmp(s->tipo, "bool") != 0 && strcmp(s->tipo, "desconhecido") != 0) {
+                                          printf("Erro semântico: operador NOT requer operando booleano\n");
+                                          erros_semanticos++;
+                                      }
+                                  }
+                                }
+	| expr PLUS expr    			{ 
                                   $$ = criarNoOp('+', $1, $3);
                                   // Se os nós forem identificadores, verificar compatibilidade
                                   if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
@@ -282,12 +333,8 @@ expr:
     | NUM               			{ $$ = criarNoNum($1); }
     | ID                			{ 
                                   $$ = criarNoId($1);
-                                  // Verificar se o identificador foi declarado antes de uso
-                                  if (!verificarDeclaracao($1)) {
-                                      erros_semanticos++;
-                                      // Inserir com tipo desconhecido para evitar erros em cascata
-                                      inserirSimbolo($1, "desconhecido");
-                                  }
+                                  // Verificação semântica será feita em uma passada separada
+                                  // após a construção completa da AST
                                 }
     | TRUE              			{ $$ = criarNoOp('T', NULL, NULL); }
     | FALSE             			{ $$ = criarNoOp('F', NULL, NULL); }

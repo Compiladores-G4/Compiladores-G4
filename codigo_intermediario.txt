@@ -3,27 +3,28 @@
 
 main:
 L0:
-FUNC_soma_BEGIN:
-    param param_a
-    param param_b
-    t1 = a
-    t2 = b
-    t0 = t1 + t2
-    c = t0
-    t3 = c
-    return t3
-FUNC_soma_END:
+FUNC_fatorial_BEGIN:
+    param param_n
+    t0 = 1
+    resultado = t0
 L1:
-FUNC_multiplicar_BEGIN:
-    param param_x
-    param param_y
-    t5 = x
-    t6 = y
+    t2 = n
+    t3 = 1
+    t1 = t2 > t3
+    if t1 == 0 goto L2
+    t5 = resultado
+    t6 = n
     t4 = t5 * t6
     resultado = t4
-    t7 = resultado
-    return t7
-FUNC_multiplicar_END:
+    t8 = n
+    t9 = 1
+    t7 = t8 - t9
+    n = t7
+    goto L1
+L2:
+    t10 = resultado
+    return t10
+FUNC_fatorial_END:
 end:
 
 ================================

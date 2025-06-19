@@ -91,6 +91,9 @@ TipoOperacao mapearOperador(char op) {
         case '>': return OP_GT;
         case 'l': return OP_LE;  // <=
         case 'g': return OP_GE;  // >=
+        case '&': return OP_AND; // and
+        case '|': return OP_OR;  // or
+        case '~': return OP_NOT; // not
         default: return OP_ASSIGN;
     }
 }
@@ -124,6 +127,12 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             } else if (no->operador == 'f') { // Float
                 // Assumindo que 0.0 é representado como "f" na AST
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0.0", NULL, -1);
+                return;
+            } else if (no->operador == '~') { // NOT (operador unário)
+                char *temp1 = gerarTemporario(codigo);
+                gerarCodigoExpressao(codigo, no->esquerda, temp1);
+                adicionarInstrucao(codigo, OP_NOT, resultado, temp1, NULL, -1);
+                free(temp1);
                 return;
             }
             
@@ -205,6 +214,9 @@ void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
             case NO_WHILE:
                 gerarCodigoLaco(codigo, atual);
                 break;
+            case NO_FOR:
+                gerarCodigoFor(codigo, atual);
+                break;
             default:
                 // Tratar outros tipos se necessário
                 break;
@@ -234,6 +246,9 @@ void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
                     break;
                 case NO_WHILE:
                     gerarCodigoLaco(codigo, atual);
+                    break;
+                case NO_FOR:
+                    gerarCodigoFor(codigo, atual);
                     break;
                 default:
                     // Tratar outros tipos se necessário
@@ -282,6 +297,9 @@ void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no) {
             case NO_WHILE:
                 gerarCodigoLaco(codigo, atual);
                 break;
+            case NO_FOR:
+                gerarCodigoFor(codigo, atual);
+                break;
             default:
                 // Tratar outros tipos se necessário
                 break;
@@ -296,6 +314,80 @@ void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no) {
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFim);
     
     free(condicao);
+}
+
+// Gera código para uma estrutura de laço for
+void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
+    if (no == NULL) return;
+    
+    // Extrair variável, início, fim, passo e corpo
+    NoAST *variavel = no->esquerda;
+    NoAST *inicio = no->direita;
+    NoAST *fim = no->condicao;
+    NoAST *passo = no->proximoIrmao;
+    NoAST *corpo = no->corpo;
+    
+    int rotuloInicio = gerarRotulo(codigo);
+    int rotuloFim = gerarRotulo(codigo);
+    char *tempCondicao = gerarTemporario(codigo);
+    char *tempFim = gerarTemporario(codigo);
+    char *tempPasso = gerarTemporario(codigo);
+    
+    // Inicializar variável de iteração
+    char *tempInicio = gerarTemporario(codigo);
+    gerarCodigoExpressao(codigo, inicio, tempInicio);
+    adicionarInstrucao(codigo, OP_ASSIGN, variavel->nome, tempInicio, NULL, 0);
+    
+    // Gerar código para fim e passo
+    gerarCodigoExpressao(codigo, fim, tempFim);
+    gerarCodigoExpressao(codigo, passo, tempPasso);
+    
+    // Rótulo de início do laço
+    adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloInicio);
+    
+    // Verificar condição: variavel < fim
+    adicionarInstrucao(codigo, OP_LT, tempCondicao, variavel->nome, tempFim, 0);
+    adicionarInstrucao(codigo, OP_CJUMP, NULL, tempCondicao, "0", rotuloFim);
+    
+    // Código para o corpo do laço
+    NoAST *atual = corpo;
+    while (atual != NULL) {
+        switch (atual->tipo) {
+            case NO_ATRIBUICAO:
+                gerarCodigoAtribuicao(codigo, atual);
+                break;
+            case NO_DECLARACAO:
+                gerarCodigoDeclaracao(codigo, atual);
+                break;
+            case NO_IF:
+                gerarCodigoCondicional(codigo, atual);
+                break;
+            case NO_WHILE:
+                gerarCodigoLaco(codigo, atual);
+                break;
+            case NO_FOR:
+                gerarCodigoFor(codigo, atual);
+                break;
+            default:
+                // Tratar outros tipos se necessário
+                break;
+        }
+        atual = atual->proximoIrmao;
+    }
+    
+    // Incrementar variável de iteração
+    adicionarInstrucao(codigo, OP_ADD, variavel->nome, variavel->nome, tempPasso, 0);
+    
+    // Salto incondicional de volta para o início do laço
+    adicionarInstrucao(codigo, OP_JUMP, NULL, NULL, NULL, rotuloInicio);
+    
+    // Rótulo para o fim do laço
+    adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFim);
+    
+    free(tempCondicao);
+    free(tempFim);
+    free(tempPasso);
+    free(tempInicio);
 }
 
 // Gera código para uma definição de função
@@ -342,6 +434,9 @@ void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no) {
                 break;
             case NO_WHILE:
                 gerarCodigoLaco(codigo, atual);
+                break;
+            case NO_FOR:
+                gerarCodigoFor(codigo, atual);
                 break;
             case NO_OPERADOR:
                 if (atual->operador == 'r') {  // Return
@@ -416,6 +511,9 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
                 break;
             case NO_WHILE:
                 gerarCodigoLaco(codigo, atual);
+                break;
+            case NO_FOR:
+                gerarCodigoFor(codigo, atual);
                 break;
             case NO_FUNCAO:
                 gerarCodigoFuncao(codigo, atual);
@@ -496,6 +594,15 @@ void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
                     break;
                 case OP_NE:
                     printf("%s = %s != %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_AND:
+                    printf("%s = %s && %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_OR:
+                    printf("%s = %s || %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_NOT:
+                    printf("%s = !%s\n", atual->resultado, atual->arg1);
                     break;
                 case OP_PARAM:
                     printf("param %s\n", atual->arg1);

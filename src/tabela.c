@@ -253,6 +253,16 @@ int verificarOperacao(char *nome1, char *nome2, char operador) {
   
   if (s1 == NULL || s2 == NULL) return 0;
   
+  // Operadores lógicos booleanos (AND, OR) só podem ser aplicados a bool
+  if ((operador == '&' || operador == '|') && 
+      (strcmp(s1->tipo, "bool") != 0 || strcmp(s2->tipo, "bool") != 0)) {
+    if (strcmp(s1->tipo, "desconhecido") != 0 && strcmp(s2->tipo, "desconhecido") != 0) {
+      printf("Erro semântico: operador '%s' requer operandos do tipo bool\n", 
+             operador == '&' ? "AND" : "OR");
+      return 0;
+    }
+  }
+  
   // Operadores lógicos só podem ser aplicados a bool
   if ((operador == '=' || operador == '!') && 
       (strcmp(s1->tipo, "bool") != 0 || strcmp(s2->tipo, "bool") != 0)) {
