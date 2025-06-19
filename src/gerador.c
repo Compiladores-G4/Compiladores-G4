@@ -316,8 +316,14 @@ void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no) {
     
     // Processar parâmetros da função
     NoAST *param = no->esquerda;
+    int paramCount = 0;
     while (param != NULL) {
-        // Aqui pode adicionar código para processar parâmetros
+        if (param->tipo == NO_DECLARACAO) {
+            char paramName[64];
+            sprintf(paramName, "param_%s", param->nome);
+            adicionarInstrucao(codigo, OP_PARAM, param->nome, paramName, NULL, -1);
+            paramCount++;
+        }
         param = param->proximoIrmao;
     }
     

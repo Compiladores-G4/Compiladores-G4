@@ -49,9 +49,9 @@ int current_line_indent = 0;
 "True"               { yylval.string = strdup(yytext); return TRUE; }
 "False"              { yylval.string = strdup(yytext); return FALSE; }
 
-"int" 							 { return TYPE_INT; 	}
-"float" 						 { return TYPE_FLOAT; }
-"bool" 							 { return TYPE_BOOL; 	}
+"int" 							 { yylval.string = strdup("int"); return TYPE_INT; 	}
+"float" 						 { yylval.string = strdup("float"); return TYPE_FLOAT; }
+"bool" 							 { yylval.string = strdup("bool"); return TYPE_BOOL; 	}
 
 [0-9]+               { yylval.intValue = atoi(yytext); return NUM; }
 [0-9]+\.[0-9]+       { yylval.string = strdup(yytext); return FLOAT_NUM; }

@@ -60,9 +60,10 @@ void inicializarCompilador() {
 %token LPAREN RPAREN LBRACE RBRACE COMMA COLON SEMICOLON
 %token INDENT DEDENT
 %token ARROW
-%token TYPE_INT TYPE_FLOAT TYPE_BOOL
+%token <string> TYPE_INT TYPE_FLOAT TYPE_BOOL
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt
+%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt parameter_list parameter
+%type <string> type_annotation
 
 %%
 
@@ -96,6 +97,47 @@ function_stmt:
 		$$ = criarNoFuncao("void", $2, NULL, $8);
         sairEscopo(); // Sai do escopo da função quando terminar
 	}
+	| DEF ID LPAREN parameter_list RPAREN COLON {
+        criarEscopo($2); // Cria um escopo para a função
+    } INDENT statements DEDENT {
+		$$ = criarNoFuncao("void", $2, $4, $9);
+        sairEscopo(); // Sai do escopo da função quando terminar
+	}
+	| DEF ID LPAREN RPAREN ARROW type_annotation COLON {
+        criarEscopo($2); // Cria um escopo para a função
+    } INDENT statements DEDENT {
+		$$ = criarNoFuncao($6, $2, NULL, $10);
+        sairEscopo(); // Sai do escopo da função quando terminar
+	}
+	| DEF ID LPAREN parameter_list RPAREN ARROW type_annotation COLON {
+        criarEscopo($2); // Cria um escopo para a função
+    } INDENT statements DEDENT {
+		$$ = criarNoFuncao($7, $2, $4, $11);
+        sairEscopo(); // Sai do escopo da função quando terminar
+	}
+	;
+
+parameter_list:
+	parameter {
+		$$ = $1;
+	}
+	| parameter_list COMMA parameter {
+		$$ = adicionarIrmao($1, $3);
+	}
+	;
+
+parameter:
+	ID COLON type_annotation {
+		$$ = criarNoDeclaracao($3, $1, NULL);
+		// Inserir parâmetro na tabela de símbolos do escopo da função
+		inserirSimbolo($1, $3);
+	}
+	;
+
+type_annotation:
+	TYPE_INT { $$ = $1; }
+	| TYPE_FLOAT { $$ = $1; }
+	| TYPE_BOOL { $$ = $1; }
 	;
 
 statements:
@@ -110,8 +152,9 @@ statements:
 statement:
 	variable_declaration { $$ = $1; }
 	| RETURN { $$ = criarNoOp('r', NULL, NULL); }
+	| RETURN expr { $$ = criarNoOp('r', $2, NULL); }
 	| conditional_stmt { $$ = $1; }
-	| while_stmt { $$ = $1; } // Adicione esta linha
+	| while_stmt { $$ = $1; }
 	;
 
 while_stmt:
