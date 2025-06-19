@@ -73,7 +73,7 @@ void inicializarCompilador() {
 %right UMINUS
 %left LPAREN RPAREN
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter
+%type <ast> expr variable_declaration statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter
 %type <string> type_annotation
 
 %%
@@ -207,34 +207,7 @@ else_part:
 	;
 
 variable_declaration:
-	ID ASSIGN value { 
-		NoAST *id_node = criarNoId($1);
-		$$ = criarNoAtribuicao(id_node, $3);
-		
-		// Inferir o tipo com base no valor e inserir na tabela de símbolos
-		char *tipo;
-		if ($3->tipo == NO_NUMERO) {
-			tipo = "int";
-		} else if ($3->tipo == NO_OPERADOR && $3->operador == 'f') {
-			tipo = "float";
-		} else if ($3->tipo == NO_OPERADOR && ($3->operador == 'T' || $3->operador == 'F')) {
-			tipo = "bool";
-		} else {
-			tipo = "desconhecido";
-		}
-		
-		// Verificar se é uma redeclaração com tipo diferente
-		Simbolo *s = buscarSimboloNoEscopo($1, obterNomeEscopoAtual());
-		if (s != NULL && strcmp(s->tipo, "desconhecido") != 0 && 
-            strcmp(s->tipo, tipo) != 0 && strcmp(tipo, "desconhecido") != 0) {
-			printf("Erro semântico: redeclaração de '%s' com tipo incompatível\n", $1);
-			erros_semanticos++;
-		}
-		
-		// Inserir na tabela de símbolos
-		inserirSimbolo($1, tipo);
-	}
-	| ID ASSIGN expr { 
+	ID ASSIGN expr { 
 		NoAST *id_node = criarNoId($1);
 		$$ = criarNoAtribuicao(id_node, $3);
 		
@@ -250,20 +223,25 @@ variable_declaration:
 			}
 		} else if ($3->tipo == NO_NUMERO) {
 			tipo = "int";
+		} else if ($3->tipo == NO_OPERADOR && $3->operador == 'f') {
+			tipo = "float";
+		} else if ($3->tipo == NO_OPERADOR && ($3->operador == 'T' || $3->operador == 'F')) {
+			tipo = "bool";
 		} else {
 			tipo = "int"; // Assumir int como padrão
+		}
+		
+		// Verificar se é uma redeclaração com tipo diferente
+		Simbolo *s = buscarSimboloNoEscopo($1, obterNomeEscopoAtual());
+		if (s != NULL && strcmp(s->tipo, "desconhecido") != 0 && 
+            strcmp(s->tipo, tipo) != 0 && strcmp(tipo, "desconhecido") != 0) {
+			printf("Erro semântico: redeclaração de '%s' com tipo incompatível\n", $1);
+			erros_semanticos++;
 		}
 		
 		// Inserir na tabela de símbolos
 		inserirSimbolo($1, tipo);
 	}
-	;
-
-value:
-	TRUE     		{ $$ = criarNoOp('T', NULL, NULL); }
-	| FALSE    	    { $$ = criarNoOp('F', NULL, NULL); }
-	| expr			{ $$ = $1; }
-	| FLOAT_NUM     { $$ = criarNoOp('f', NULL, NULL); /* Representando float */ }
 	;
 
 expr:
