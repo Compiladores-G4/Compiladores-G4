@@ -99,7 +99,7 @@ complex_condition = x > 0 and y < 20 or not finished
 ## Como Compilar
 
 ```bash
-cd /home/harrymartins/Documentos/Compiladores-G4
+cd ~/Compiladores-G4
 make clean
 make
 ```
