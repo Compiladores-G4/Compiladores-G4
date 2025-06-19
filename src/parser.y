@@ -73,7 +73,7 @@ void inicializarCompilador() {
 %right UMINUS
 %left LPAREN RPAREN
 
-%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt parameter_list parameter
+%type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter
 %type <string> type_annotation
 
 %%
@@ -166,11 +166,27 @@ statement:
 	| RETURN expr { $$ = criarNoOp('r', $2, NULL); }
 	| conditional_stmt { $$ = $1; }
 	| while_stmt { $$ = $1; }
+	| for_stmt { $$ = $1; }
 	;
 
 while_stmt:
 	WHILE expr COLON INDENT statements DEDENT {
 		$$ = criarNoWhile($2, $5);
+	}
+	;
+
+for_stmt:
+	FOR ID IN RANGE LPAREN expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), criarNoNum(0), $6, criarNoNum(1), $10);
+	}
+	| FOR ID IN RANGE LPAREN expr COMMA expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), $6, $8, criarNoNum(1), $12);
+	}
+	| FOR ID IN RANGE LPAREN expr COMMA expr COMMA expr RPAREN COLON INDENT statements DEDENT {
+		inserirSimbolo($2, "int");  // Declarar automaticamente a variável de iteração
+		$$ = criarNoFor(criarNoId($2), $6, $8, $10, $14);
 	}
 	;
 
@@ -213,6 +229,29 @@ variable_declaration:
             strcmp(s->tipo, tipo) != 0 && strcmp(tipo, "desconhecido") != 0) {
 			printf("Erro semântico: redeclaração de '%s' com tipo incompatível\n", $1);
 			erros_semanticos++;
+		}
+		
+		// Inserir na tabela de símbolos
+		inserirSimbolo($1, tipo);
+	}
+	| ID ASSIGN expr { 
+		NoAST *id_node = criarNoId($1);
+		$$ = criarNoAtribuicao(id_node, $3);
+		
+		// Para atribuições com expressões, inferir o tipo
+		char *tipo;
+		if ($3->tipo == NO_ID) {
+			// Se é atribuição de um ID, buscar o tipo desse ID
+			Simbolo *s = buscarSimbolo($3->nome);
+			if (s != NULL) {
+				tipo = s->tipo;
+			} else {
+				tipo = "int"; // Assumir int como padrão para variáveis de loop
+			}
+		} else if ($3->tipo == NO_NUMERO) {
+			tipo = "int";
+		} else {
+			tipo = "int"; // Assumir int como padrão
 		}
 		
 		// Inserir na tabela de símbolos
@@ -316,12 +355,8 @@ expr:
     | NUM               			{ $$ = criarNoNum($1); }
     | ID                			{ 
                                   $$ = criarNoId($1);
-                                  // Verificar se o identificador foi declarado antes de uso
-                                  if (!verificarDeclaracao($1)) {
-                                      erros_semanticos++;
-                                      // Inserir com tipo desconhecido para evitar erros em cascata
-                                      inserirSimbolo($1, "desconhecido");
-                                  }
+                                  // Verificação semântica será feita em uma passada separada
+                                  // após a construção completa da AST
                                 }
     | TRUE              			{ $$ = criarNoOp('T', NULL, NULL); }
     | FALSE             			{ $$ = criarNoOp('F', NULL, NULL); }

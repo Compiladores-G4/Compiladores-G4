@@ -66,6 +66,7 @@ void gerarCodigoDeclaracao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoAtribuicao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no);
+void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no);
 void gerarCodigoChamada(CodigoIntermediario *codigo, NoAST *no, char *resultado);
 
