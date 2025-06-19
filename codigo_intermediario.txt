@@ -2,28 +2,61 @@
 ===== CÓDIGO INTERMEDIÁRIO =====
 
 main:
+    t0 = 5
+    x = t0
+    t1 = 10
+    y = t1
+    t2 = 1
+    a = t2
+    t3 = 0
+    b = t3
+    t7 = x
+    t8 = 0
+    t5 = t7 > t8
+    t9 = y
+    t10 = 20
+    t6 = t9 < t10
+    t4 = t5 && t6
+    if t4 == 0 goto L0
+    t11 = 1
+    result = t11
+    goto L1
 L0:
-FUNC_soma_BEGIN:
-    param param_a
-    param param_b
-    t1 = a
-    t2 = b
-    t0 = t1 + t2
-    c = t0
-    t3 = c
-    return t3
-FUNC_soma_END:
+    t12 = 0
+    result = t12
 L1:
-FUNC_multiplicar_BEGIN:
-    param param_x
-    param param_y
-    t5 = x
-    t6 = y
-    t4 = t5 * t6
-    resultado = t4
-    t7 = resultado
-    return t7
-FUNC_multiplicar_END:
+    t14 = a
+    t15 = b
+    t13 = t14 || t15
+    if t13 == 0 goto L2
+    t16 = 1
+    value = t16
+    goto L3
+L2:
+    t17 = 0
+    value = t17
+L3:
+    t19 = a
+    t18 = !t19
+    if t18 == 0 goto L4
+    t20 = 0
+    flag = t20
+    goto L5
+L4:
+    t21 = 1
+    flag = t21
+L5:
+    t27 = x
+    t28 = 0
+    t25 = t27 > t28
+    t29 = y
+    t30 = 20
+    t26 = t29 < t30
+    t23 = t25 && t26
+    t31 = b
+    t24 = !t31
+    t22 = t23 || t24
+    condition = t22
 end:
 
 ================================

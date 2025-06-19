@@ -46,6 +46,9 @@ int current_line_indent = 0;
 "for"                { return FOR; 		}
 "in"                 { return IN; 		}
 "range"              { return RANGE; 	}
+"and"                { return AND; }
+"or"                 { return OR; }
+"not"                { return NOT; }
 "True"               { yylval.string = strdup(yytext); return TRUE; }
 "False"              { yylval.string = strdup(yytext); return FALSE; }
 
@@ -70,10 +73,6 @@ int current_line_indent = 0;
 "="                   { return ASSIGN; }
 
 "->"									{ return ARROW; }
-
-"and"                 { return AND; }
-"or"                  { return OR; }
-"not"                 { return NOT; }
 
 "+"                   { return PLUS; }
 "-"                   { return MINUS; }

@@ -91,6 +91,9 @@ TipoOperacao mapearOperador(char op) {
         case '>': return OP_GT;
         case 'l': return OP_LE;  // <=
         case 'g': return OP_GE;  // >=
+        case '&': return OP_AND; // and
+        case '|': return OP_OR;  // or
+        case '~': return OP_NOT; // not
         default: return OP_ASSIGN;
     }
 }
@@ -124,6 +127,12 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             } else if (no->operador == 'f') { // Float
                 // Assumindo que 0.0 é representado como "f" na AST
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0.0", NULL, -1);
+                return;
+            } else if (no->operador == '~') { // NOT (operador unário)
+                char *temp1 = gerarTemporario(codigo);
+                gerarCodigoExpressao(codigo, no->esquerda, temp1);
+                adicionarInstrucao(codigo, OP_NOT, resultado, temp1, NULL, -1);
+                free(temp1);
                 return;
             }
             
@@ -496,6 +505,15 @@ void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
                     break;
                 case OP_NE:
                     printf("%s = %s != %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_AND:
+                    printf("%s = %s && %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_OR:
+                    printf("%s = %s || %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_NOT:
+                    printf("%s = !%s\n", atual->resultado, atual->arg1);
                     break;
                 case OP_PARAM:
                     printf("param %s\n", atual->arg1);

@@ -62,6 +62,17 @@ void inicializarCompilador() {
 %token ARROW
 %token <string> TYPE_INT TYPE_FLOAT TYPE_BOOL
 
+// Definindo precedência dos operadores (menor para maior precedência)
+%left OR
+%left AND
+%right NOT
+%left EQ NE
+%left LT GT LE GE
+%left PLUS MINUS
+%left TIMES DIVIDE MOD
+%right UMINUS
+%left LPAREN RPAREN
+
 %type <ast> expr variable_declaration value statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt parameter_list parameter
 %type <string> type_annotation
 
@@ -217,7 +228,30 @@ value:
 	;
 
 expr:
-	expr PLUS expr    			{ 
+	expr AND expr   			{ 
+                                  $$ = criarNoOp('&', $1, $3); 
+                                  if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
+                                      verificarOperacao($1->nome, $3->nome, '&');
+                                  }
+                                }
+    | expr OR expr      			{ 
+                                  $$ = criarNoOp('|', $1, $3); 
+                                  if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
+                                      verificarOperacao($1->nome, $3->nome, '|');
+                                  }
+                                }
+    | NOT expr          			{ 
+                                  $$ = criarNoOp('~', $2, NULL); 
+                                  if ($2->tipo == NO_ID) {
+                                      // Verificar se o operando é válido para NOT
+                                      Simbolo *s = buscarSimbolo($2->nome);
+                                      if (s != NULL && strcmp(s->tipo, "bool") != 0 && strcmp(s->tipo, "desconhecido") != 0) {
+                                          printf("Erro semântico: operador NOT requer operando booleano\n");
+                                          erros_semanticos++;
+                                      }
+                                  }
+                                }
+	| expr PLUS expr    			{ 
                                   $$ = criarNoOp('+', $1, $3);
                                   // Se os nós forem identificadores, verificar compatibilidade
                                   if ($1->tipo == NO_ID && $3->tipo == NO_ID) {

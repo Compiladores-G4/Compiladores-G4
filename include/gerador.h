@@ -21,6 +21,9 @@ typedef enum {
     OP_GE,      // >=
     OP_EQ,      // ==
     OP_NE,      // !=
+    OP_AND,     // and
+    OP_OR,      // or
+    OP_NOT,     // not
     OP_PARAM,   // Parâmetro para função
     OP_CALL,    // Chamada de função
     OP_RETURN,  // Retorno de função
