@@ -223,6 +223,8 @@ variable_declaration:
 			}
 		} else if ($3->tipo == NO_NUMERO) {
 			tipo = "int";
+		} else if ($3->tipo == NO_FLOAT) {
+			tipo = "float";
 		} else if ($3->tipo == NO_OPERADOR && $3->operador == 'f') {
 			tipo = "float";
 		} else if ($3->tipo == NO_OPERADOR && ($3->operador == 'T' || $3->operador == 'F')) {
@@ -338,7 +340,10 @@ expr:
                                 }
     | TRUE              			{ $$ = criarNoOp('T', NULL, NULL); }
     | FALSE             			{ $$ = criarNoOp('F', NULL, NULL); }
-    | FLOAT_NUM         			{ $$ = criarNoOp('f', NULL, NULL); /* Representando float */ }
+    | FLOAT_NUM         			{ 
+                                  float valor = atof($1);
+                                  $$ = criarNoFloat(valor);
+                                }
 	;
 
 %%

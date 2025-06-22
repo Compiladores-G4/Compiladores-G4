@@ -35,37 +35,31 @@ int main(int arc, char **argv) {
 
   yyin = input;
 
-  // Adicionar maior controle de erro
   int parse_result = yyparse();
   
   if (parse_result == 0 && raiz != NULL) {
     fprintf(stdout, "AST gerada com sucesso!\n");
     imprimirASTDetalhada(raiz, 0);
     
-    // Verificar erros semânticos
     if (erros_semanticos > 0) {
       fprintf(stderr, "\nForam encontrados %d erro(s) semântico(s).\n", erros_semanticos);
     } else {
       fprintf(stdout, "\nNenhum erro semântico encontrado!\n");
       
-      // Gerar código intermediário
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
         fprintf(stdout, "Código intermediário gerado com sucesso!\n");
         imprimirCodigoIntermediario(codigo);
         
-        // Opcionalmente, salvar o código intermediário em um arquivo
         FILE *codInterFile = fopen("codigo_intermediario.txt", "w");
         if (codInterFile != NULL) {
-          // Redirecionar stdout temporariamente para o arquivo
           FILE *stdout_orig = stdout;
           stdout = codInterFile;
           imprimirCodigoIntermediario(codigo);
-          stdout = stdout_orig; // Restaurar stdout
+          stdout = stdout_orig; 
           fclose(codInterFile);
         }
         
-        // Liberar a memória do código intermediário
         liberarCodigoIntermediario(codigo);
       }
     }
@@ -80,8 +74,14 @@ int main(int arc, char **argv) {
   imprimirEscopos();
 
   if (raiz != NULL) {
+    fprintf(output, "#include <stdio.h>\n");
+    fprintf(output, "#include <stdbool.h>\n\n");
+    
     gerarCodigoC(raiz, output);
     liberarAST(raiz);
+
+    extern void liberarVariaveisDeclaradas();
+    liberarVariaveisDeclaradas();
   }
 
   fclose(output);

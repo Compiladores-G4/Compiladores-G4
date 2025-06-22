@@ -112,6 +112,11 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             adicionarInstrucao(codigo, OP_ASSIGN, resultado, valorStr, NULL, -1);
             break;
             
+        case NO_FLOAT:           // Adicionar caso para float
+            sprintf(valorStr, "%.6f", no->valorFloat);
+            adicionarInstrucao(codigo, OP_ASSIGN, resultado, valorStr, NULL, -1);
+            break;
+            
         case NO_ID:
             adicionarInstrucao(codigo, OP_LOAD, resultado, no->nome, NULL, -1);
             break;
@@ -119,13 +124,12 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
         case NO_OPERADOR:
             // Operadores especiais como True(T) e False(F)
             if (no->operador == 'T') {
-                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "1", NULL, -1);
+                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "true", NULL, -1);
                 return;
             } else if (no->operador == 'F') {
-                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0", NULL, -1);
+                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "false", NULL, -1);
                 return;
-            } else if (no->operador == 'f') { // Float
-                // Assumindo que 0.0 é representado como "f" na AST
+            } else if (no->operador == 'f') { // Float literal (compatibilidade)
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0.0", NULL, -1);
                 return;
             } else if (no->operador == '~') { // NOT (operador unário)
