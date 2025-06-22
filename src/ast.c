@@ -400,10 +400,8 @@ void gerarParametros(NoAST *param, FILE *saida) {
 void gerarArgumentos(NoAST *arg, FILE *saida) {
     if (!arg) return;
     
-    // Gera o código para o argumento atual
     gerarCodigoC(arg, saida);
-    
-    // Se houver mais argumentos, adicione uma vírgula e continue
+
     if (arg->proximoIrmao) {
         fprintf(saida, ", ");
         gerarArgumentos(arg->proximoIrmao, saida);
