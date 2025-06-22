@@ -172,6 +172,8 @@ statement:
 	| conditional_stmt { $$ = $1; }
 	| while_stmt { $$ = $1; }
 	| for_stmt { $$ = $1; }
+	| ID LPAREN RPAREN { $$ = criarNoChamada($1, NULL); }
+	| ID LPAREN element_list RPAREN { $$ = criarNoChamada($1, $3); }
 	;
 
 while_stmt:
@@ -349,6 +351,8 @@ expr:
                                   float valor = atof($1);
                                   $$ = criarNoFloat(valor);
                                 }
+    | ID LPAREN RPAREN              { $$ = criarNoChamada($1, NULL); }
+    | ID LPAREN element_list RPAREN { $$ = criarNoChamada($1, $3); }
     | list_expr         			{ $$ = $1; }
 	;
 

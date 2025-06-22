@@ -8,3 +8,5 @@ elif x < 30:
     y = 20
 else:
     y = 30
+
+print(x)

@@ -28,6 +28,8 @@ void liberarAST(NoAST *raiz);
 
 void gerarCodigoC(NoAST *raiz, FILE *saida);
 
+extern int nivelIndentacao;
+
 char* inferirTipoExpressao(NoAST *expr);
 int variavelJaDeclarada(char *nome);
 void marcarVariavelDeclarada(char *nome);

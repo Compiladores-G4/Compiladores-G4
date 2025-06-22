@@ -1,4 +1,5 @@
 obj/*
 compilador
 output.c
+output_test
 codigo_intermediario.txt

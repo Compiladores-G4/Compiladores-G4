@@ -77,7 +77,61 @@ int main(int arc, char **argv) {
     fprintf(output, "#include <stdio.h>\n");
     fprintf(output, "#include <stdbool.h>\n\n");
     
-    gerarCodigoC(raiz, output);
+    // Verificar se há funções definidas na AST
+    int temFuncoes = 0;
+    NoAST *atual = raiz;
+    while (atual != NULL) {
+        if (atual->tipo == NO_FUNCAO) {
+            temFuncoes = 1;
+            break;
+        }
+        atual = atual->proximoIrmao;
+    }
+    
+    if (temFuncoes) {
+        // Se há funções definidas, gerar normalmente
+        gerarCodigoC(raiz, output);
+        
+        // Gerar função main() automaticamente
+        fprintf(output, "\nint main() {\n");
+        
+        // Percorrer a AST para encontrar funções definidas e gerar chamadas de teste
+        atual = raiz;
+        while (atual != NULL) {
+            if (atual->tipo == NO_FUNCAO) {
+                if (strcmp(atual->nome, "main") != 0) { 
+                    
+                    // Gerar chamada básica dependendo dos parâmetros
+                    if (atual->esquerda == NULL) {
+                        // Função sem parâmetros
+                        fprintf(output, "    %s();\n", atual->nome);
+                    } else {
+                        // Função com parâmetros não será chamada automaticamente
+                    }
+                }
+            }
+            atual = atual->proximoIrmao;
+        }
+        
+        fprintf(output, "    return 0;\n");
+        fprintf(output, "}\n");
+    } else {
+        // Se não há funções, colocar todo o código dentro de main()
+        fprintf(output, "int main() {\n");
+        
+        // Definir um nível de indentação inicial para o corpo da main
+        extern int nivelIndentacao;
+        nivelIndentacao = 1;
+        
+        gerarCodigoC(raiz, output);
+        
+        // Resetar indentação
+        nivelIndentacao = 0;
+        
+        fprintf(output, "    return 0;\n");
+        fprintf(output, "}\n");
+    }
+    
     liberarAST(raiz);
 
     extern void liberarVariaveisDeclaradas();
