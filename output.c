@@ -1,26 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-int x = 5;
-int y = 10;
-bool a = true;
-bool b = false;
-if (((x > 0) && (y < 20))) {
-bool result = true;
+for (int i = 0; i < 5; i += 1) {
+int x = i;
 }
-else {
-bool result = false;
+for (int j = 2; j < 8; j += 1) {
+int y = j;
 }
-if ((a || b)) {
-int value = 1;
+for (int k = 0; k < 10; k += 2) {
+int z = k;
 }
-else {
-int value = 0;
-}
-if (!(a)) {
-bool flag = false;
-}
-else {
-bool flag = true;
-}
-bool condition = (((x > 0) && (y < 20)) || !(b));
