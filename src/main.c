@@ -75,13 +75,16 @@ int main(int arc, char **argv) {
   }
 
   fclose(input);
-  fclose(output);
+
   imprimirTabela();
   imprimirEscopos();
 
   if (raiz != NULL) {
+    gerarCodigoC(raiz, output);
     liberarAST(raiz);
   }
+
+  fclose(output);
 
   return 0;
 }
