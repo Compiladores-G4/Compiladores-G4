@@ -14,6 +14,9 @@ NoAST *raiz = NULL;
 extern int yylex();
 void yyerror(const char *s);
 
+extern char *yytext;
+extern int yylineno;
+
 // Contador de erros semânticos
 int erros_semanticos = 0;
 
@@ -57,10 +60,12 @@ void inicializarCompilador() {
 %token EQ NE LT GT LE GE ASSIGN
 %token AND OR NOT
 %token PLUS MINUS TIMES DIVIDE MOD
-%token LPAREN RPAREN LBRACE RBRACE COMMA COLON SEMICOLON
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET COMMA COLON SEMICOLON
 %token INDENT DEDENT
 %token ARROW
 %token <string> TYPE_INT TYPE_FLOAT TYPE_BOOL
+
+
 
 // Definindo precedência dos operadores (menor para maior precedência)
 %left OR
@@ -73,7 +78,7 @@ void inicializarCompilador() {
 %right UMINUS
 %left LPAREN RPAREN
 
-%type <ast> expr variable_declaration statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter
+%type <ast> expr variable_declaration statement statements program conditional_stmt else_part function_stmt function_stmts while_stmt for_stmt parameter_list parameter list_expr element_list
 %type <string> type_annotation
 
 %%
@@ -344,10 +349,23 @@ expr:
                                   float valor = atof($1);
                                   $$ = criarNoFloat(valor);
                                 }
+    | list_expr         			{ $$ = $1; }
 	;
+
+list_expr:
+    LBRACKET RBRACKET               { $$ = criarNoListaVazia(); }
+    | LBRACKET element_list RBRACKET { $$ = $2; }
+    ;
+
+element_list:
+    expr                            { $$ = criarNoLista($1, NULL); }
+    | expr COMMA element_list       { $$ = criarNoLista($1, $3); }
+    ;
 
 %%
 
 void yyerror(const char *s) {
     fprintf(stderr, "Erro de sintaxe: %s\n", s);
+    fprintf(stderr, "Token inesperado: %s\n", yytext);
+    fprintf(stderr, "Linha: %d\n", yylineno);
 }

@@ -13,7 +13,8 @@ typedef enum {
   NO_DECLARACAO,
   NO_FUNCAO,
   NO_CHAMADA,
-  NO_BLOCO
+  NO_BLOCO,
+  NO_LISTA
 } TipoNo;
 
 typedef struct NoAST {

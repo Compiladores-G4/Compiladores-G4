@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-for (int i = 0; i < 5; i += 1) {
-int x = i;
+int fatorial(int n) {
+int resultado = 1;
+while ((n > 1)) {
+resultado = (resultado * n);
+n = (n - 1);
 }
-for (int j = 2; j < 8; j += 1) {
-int y = j;
+return resultado;
 }
-for (int k = 0; k < 10; k += 2) {
-int z = k;
-}
+

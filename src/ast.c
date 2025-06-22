@@ -99,7 +99,31 @@ NoAST *criarNoChamada(char *nome, NoAST *argumentos) {
 NoAST *criarNoBloco(NoAST *declaracoes) {
   NoAST *novo = criarNoBase(NO_BLOCO, ' ');
   novo->esquerda = declaracoes;
+  novo->direita = NULL;
+  novo->condicao = novo->corpo = NULL;
+  novo->proximoIrmao = NULL;
   return novo;
+}
+
+NoAST *criarNoListaVazia(void) {
+    NoAST *novo = malloc(sizeof(NoAST)); 
+    novo->tipo = NO_LISTA;             
+    novo->operador = '[';               
+    novo->esquerda = novo->direita = NULL; 
+    novo->condicao = novo->corpo = NULL; 
+    novo->proximoIrmao = NULL;         
+    return novo;                        
+}
+
+NoAST *criarNoLista(NoAST *primeiro, NoAST *resto) {
+    NoAST *novo = malloc(sizeof(NoAST)); 
+    novo->tipo = NO_LISTA;            
+    novo->operador = ',';              
+    novo->esquerda = primeiro;          
+    novo->direita = resto;              
+    novo->condicao = novo->corpo = NULL; 
+    novo->proximoIrmao = NULL;         
+    return novo;                        
 }
 
 NoAST *adicionarIrmao(NoAST *node, NoAST *irmao) {
@@ -149,6 +173,19 @@ void imprimirAST(NoAST *raiz) {
     case NO_BLOCO:
       printf("{ "); imprimirAST(raiz->esquerda); printf(" }");
       break;
+    case NO_LISTA: 
+    if (raiz->operador == '[') { 
+        printf("[]");            
+    } else {
+        printf("[");                
+        imprimirAST(raiz->esquerda); 
+        if (raiz->direita) {        
+            printf(", ");           
+            imprimirAST(raiz->direita); 
+        }
+        printf("]");                 
+    }
+    break;
   }
   if (raiz->proximoIrmao) { printf(", "); imprimirAST(raiz->proximoIrmao); }
 }
@@ -169,6 +206,14 @@ void imprimirASTDetalhada(NoAST *raiz, int nivel) {
     case NO_FUNCAO: printf("Função: %c %s\n", raiz->operador, raiz->nome); break;
     case NO_CHAMADA: printf("Chamada: %s\n", raiz->nome); break;
     case NO_BLOCO: printf("Bloco:\n"); break;
+    case NO_LISTA: 
+      if (raiz->operador == '[') {
+        printf("Lista Vazia\n");
+      } else {
+        printf("Lista:\n");
+      }
+      break;
+
   }
   if (raiz->condicao) {
     for (int i = 0; i < nivel + 1; i++) printf("  ");
@@ -232,6 +277,7 @@ char* inferirTipoExpressao(NoAST *expr) {
       Simbolo *s = buscarSimbolo(expr->nome);
       return s ? s->tipo : "int";
     }
+    case NO_LISTA: return "int[]";  // Arrays de inteiros
     case NO_OPERADOR:
       switch (expr->operador) {
         case 'T': case 'F': return "bool";
@@ -288,6 +334,28 @@ void marcarParametrosDeclarados(NoAST *param) {
   marcarParametrosDeclarados(param->proximoIrmao);
 }
 
+// Função auxiliar para gerar elementos de lista em C
+void gerarElementosLista(NoAST *lista, FILE *saida) {
+    if (!lista) return;
+    
+    if (lista->tipo == NO_LISTA) {
+        if (lista->operador == '[') {
+            // Lista vazia - não gera nada
+            return;
+        } else {
+            // Lista com elementos
+            gerarCodigoC(lista->esquerda, saida);
+            if (lista->direita) {
+                fprintf(saida, ", ");
+                gerarElementosLista(lista->direita, saida);
+            }
+        }
+    } else {
+        // Elemento simples
+        gerarCodigoC(lista, saida);
+    }
+}
+
 void gerarCodigoC(NoAST *raiz, FILE *saida) {
     if (!raiz) return;
 
@@ -315,20 +383,40 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
                 fprintf(saida, i < 12 ? ops[i] : " %c ", op);
                 gerarCodigoC(raiz->direita, saida); fprintf(saida, ")");
             }
-        } break;
-        case NO_ATRIBUICAO: {
+        } break;        case NO_ATRIBUICAO: {
             char *nome = raiz->esquerda->nome;
-            if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse) {
-                char *tipo = inferirTipoExpressao(raiz->direita);
-                if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse)
-                    fprintf(saida, "%s ", tipo);
+            char *tipo = inferirTipoExpressao(raiz->direita);
+              // Verificar se é uma atribuição de lista
+            if (raiz->direita->tipo == NO_LISTA) {
                 if (!variavelJaDeclarada(nome)) {
+                    if (raiz->direita->operador == '[') {
+                        // Lista vazia - em C precisamos especificar tamanho ou inicializar com NULL
+                        fprintf(saida, "int *%s = NULL; // Lista vazia\n", nome);
+                    } else {
+                        // Lista com elementos
+                        fprintf(saida, "int %s[] = {", nome);
+                        gerarElementosLista(raiz->direita, saida);
+                        fprintf(saida, "};\n");
+                    }
                     marcarVariavelDeclarada(nome);
-                    if (!buscarSimbolo(nome)) inserirSimbolo(nome, tipo);
+                    if (!buscarSimbolo(nome)) inserirSimbolo(nome, "int[]");
+                } else {
+                    // Reatribuição de array (mais complexo em C)
+                    fprintf(saida, "// Reatribuição de array não suportada diretamente\n");
                 }
+            } else {
+                // Atribuição normal
+                if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse) {
+                    if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse)
+                        fprintf(saida, "%s ", tipo);
+                    if (!variavelJaDeclarada(nome)) {
+                        marcarVariavelDeclarada(nome);
+                        if (!buscarSimbolo(nome)) inserirSimbolo(nome, tipo);
+                    }
+                }
+                gerarCodigoC(raiz->esquerda, saida); fprintf(saida, " = ");
+                gerarCodigoC(raiz->direita, saida); fprintf(saida, ";\n");
             }
-            gerarCodigoC(raiz->esquerda, saida); fprintf(saida, " = ");
-            gerarCodigoC(raiz->direita, saida); fprintf(saida, ";\n");
         } break;
         case NO_IF: {
             fprintf(saida, "if ("); gerarCodigoC(raiz->condicao, saida); fprintf(saida, ") {\n");
@@ -369,10 +457,15 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
             gerarParametros(raiz->esquerda, saida); fprintf(saida, ") {\n");
             liberarVariaveisDeclaradas(); marcarParametrosDeclarados(raiz->esquerda);
             gerarCodigoC(raiz->corpo, saida); fprintf(saida, "}\n\n");
-        } break;
-        case NO_CHAMADA:
+        } break;        case NO_CHAMADA:
             fprintf(saida, "%s(", raiz->nome); gerarArgumentos(raiz->esquerda, saida); fprintf(saida, ")"); break;
         case NO_BLOCO: gerarCodigoC(raiz->esquerda, saida); break;
+        case NO_LISTA: {
+            // Para listas simples, gerar apenas os elementos (usado em contextos específicos)
+            fprintf(saida, "{");
+            gerarElementosLista(raiz, saida);
+            fprintf(saida, "}");
+        } break;
     }
     if (raiz->proximoIrmao) gerarCodigoC(raiz->proximoIrmao, saida);
 }

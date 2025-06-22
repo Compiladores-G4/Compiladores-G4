@@ -17,6 +17,8 @@ NoAST *criarNoDeclaracao(char *tipo, char *nome, NoAST *inicializacao);
 NoAST *criarNoFuncao(char *tipo, char *nome, NoAST *parametros, NoAST *corpo);
 NoAST *criarNoChamada(char *nome, NoAST *argumentos);
 NoAST *criarNoBloco(NoAST *declaracoes);
+NoAST *criarNoListaVazia(void);
+NoAST *criarNoLista(NoAST *primeiro, NoAST *resto);
 
 NoAST *adicionarIrmao(NoAST *node, NoAST *irmao);
 

@@ -132,6 +132,8 @@ int pending_dedents = 0;
 ")"                   { return RPAREN; }
 "{"                   { return LBRACE; }
 "}"                   { return RBRACE; }
+"["                   { return LBRACKET; }
+"]"                   { return RBRACKET; }
 ","                   { return COMMA; }
 ":"                   { return COLON; }
 ";"                   { return SEMICOLON; }

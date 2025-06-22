@@ -157,13 +157,20 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             gerarCodigoChamada(codigo, no, resultado);
             break;
             
+        case NO_LISTA:
+            if (no->operador == '[') {
+                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "[]", NULL, -1);
+            } else {
+                adicionarInstrucao(codigo, OP_ASSIGN, resultado, "[...]", NULL, -1);
+            }
+            break;
+            
         default:
             fprintf(stderr, "Erro: Tipo de nó não suportado para expressão\n");
             break;
     }
 }
 
-// Gera código para uma declaração
 void gerarCodigoDeclaracao(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
@@ -175,7 +182,6 @@ void gerarCodigoDeclaracao(CodigoIntermediario *codigo, NoAST *no) {
     }
 }
 
-// Gera código para uma atribuição
 void gerarCodigoAtribuicao(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
@@ -188,7 +194,6 @@ void gerarCodigoAtribuicao(CodigoIntermediario *codigo, NoAST *no) {
     free(temp);
 }
 
-// Gera código para uma estrutura condicional (if-else)
 void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
@@ -196,13 +201,10 @@ void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
     int rotuloFalso = gerarRotulo(codigo);
     int rotuloFim = gerarRotulo(codigo);
     
-    // Gera código para a condição
     gerarCodigoExpressao(codigo, no->condicao, condicao);
     
-    // Salto condicional: se condição falsa, vai para 'rotuloFalso'
     adicionarInstrucao(codigo, OP_CJUMP, NULL, condicao, "0", rotuloFalso);
     
-    // Código para o bloco 'then'
     NoAST *atual = no->esquerda;
     while (atual != NULL) {
         switch (atual->tipo) {
