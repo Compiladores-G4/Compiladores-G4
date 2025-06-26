@@ -1,5 +1,0 @@
-def main():
-    x = 42
-    y = 3.14
-    z = True
-    return

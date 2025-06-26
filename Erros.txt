@@ -1,0 +1,3 @@
+Problema identificado: Parece que todos os testes estão gerando o mesmo código intermediário (um loop básico), o que indica que pode haver um problema no parser que não está processando corretamente os diferentes arquivos Python.
+
+Erro específico: O arquivo test_for.py apresentou erros: "Tipo de nó não suportado para expressão"
