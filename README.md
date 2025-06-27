@@ -234,3 +234,12 @@ make all       # Equivalente a make
   <img src="https://contrib.rocks/image?repo=Compiladores-G4/Compiladores-G4" />
 </a>
 
+
+| Contribuidores | Matrícula | 
+|----------|----------|
+| Oscar Correia de Brito Neto  | 211031790  | 
+| Leandro de Almeida Oliveira   | 211030827  | 
+| Breno Queiroz Lima  | 211063069  | 
+| Flavio Gustavo Araújo de Melo  | 211030602  |    
+| Harryson Campos Martins  | 211039466  | 
+| Yan Werlley de Freitas Paulo  | 211030649 | 

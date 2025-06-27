@@ -108,24 +108,46 @@ function_stmts:
 
 function_stmt:
 	DEF ID LPAREN RPAREN COLON {
+        // Inserir a função na tabela de símbolos do escopo atual (global)
+        inserirFuncao($2, "void", 0);
         criarEscopo($2); // Cria um escopo para a função
     } INDENT statements DEDENT {
 		$$ = criarNoFuncao("void", $2, NULL, $8);
         sairEscopo(); // Sai do escopo da função quando terminar
 	}
 	| DEF ID LPAREN parameter_list RPAREN COLON {
+        // Contar parâmetros
+        int numParams = 0;
+        NoAST *param = $4;
+        while (param) {
+            numParams++;
+            param = param->proximoIrmao;
+        }
+        // Inserir a função na tabela de símbolos do escopo atual (global)
+        inserirFuncao($2, "void", numParams);
         criarEscopo($2); // Cria um escopo para a função
     } INDENT statements DEDENT {
 		$$ = criarNoFuncao("void", $2, $4, $9);
         sairEscopo(); // Sai do escopo da função quando terminar
 	}
 	| DEF ID LPAREN RPAREN ARROW type_annotation COLON {
+        // Inserir a função na tabela de símbolos do escopo atual (global)
+        inserirFuncao($2, $6, 0);
         criarEscopo($2); // Cria um escopo para a função
     } INDENT statements DEDENT {
 		$$ = criarNoFuncao($6, $2, NULL, $10);
         sairEscopo(); // Sai do escopo da função quando terminar
 	}
 	| DEF ID LPAREN parameter_list RPAREN ARROW type_annotation COLON {
+        // Contar parâmetros
+        int numParams = 0;
+        NoAST *param = $4;
+        while (param) {
+            numParams++;
+            param = param->proximoIrmao;
+        }
+        // Inserir a função na tabela de símbolos do escopo atual (global)
+        inserirFuncao($2, $7, numParams);
         criarEscopo($2); // Cria um escopo para a função
     } INDENT statements DEDENT {
 		$$ = criarNoFuncao($7, $2, $4, $11);
