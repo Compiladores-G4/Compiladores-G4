@@ -1,9 +1,6 @@
 # RELATÓRIO TÉCNICO - COMPILADOR PYTHON PARA C
-
-**Data:** 27 de junho de 2025  
-**Projeto:** Compiladores-G4  
-**Versão:** 2.0 (Corrigida)  
-**Status:** ✅ TOTALMENTE FUNCIONAL
+ 
+**Projeto:** Compiladores-G4   
 
 ---
 
