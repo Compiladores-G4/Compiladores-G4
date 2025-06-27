@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "tabela.h"
 #include "gerador.h"  // Incluímos o cabeçalho do gerador
+#include "otimizador.h" // Incluímos o cabeçalho do otimizador
 
 extern int yyparse(void);
 extern FILE *yyin;
@@ -49,7 +50,12 @@ int main(int arc, char **argv) {
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
         fprintf(stdout, "Código intermediário gerado com sucesso!\n");
-        imprimirCodigoIntermediario(codigo);
+        imprimirCodigoIntermediario(codigo); // Imprime antes da otimização
+
+        // Otimiza o código intermediário
+        codigo = otimizarCodigoIntermediario(codigo);
+        fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO OTIMIZADO =====\n");
+        imprimirCodigoIntermediario(codigo); // Imprime após a otimização
         
         FILE *codInterFile = fopen("codigo_intermediario.txt", "w");
         if (codInterFile != NULL) {
