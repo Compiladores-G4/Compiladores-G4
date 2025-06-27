@@ -169,10 +169,6 @@ statement:
 	variable_declaration { $$ = $1; }
 	| RETURN { $$ = criarNoOp('r', NULL, NULL); }
 	| RETURN expr { 
-		// Verificar se a variável no return foi declarada
-		if ($2->tipo == NO_ID && !verificarDeclaracao($2->nome)) {
-			erros_semanticos++;
-		}
 		$$ = criarNoOp('r', $2, NULL); 
 	}
 	| conditional_stmt { $$ = $1; }
@@ -354,8 +350,10 @@ expr:
     | NUM               			{ $$ = criarNoNum($1); }
     | ID                			{ 
                                   $$ = criarNoId($1);
-                                  // Verificação semântica será feita em uma passada separada
-                                  // após a construção completa da AST
+                                  // Verificar se a variável foi declarada
+                                  if (!verificarDeclaracao($1)) {
+                                      erros_semanticos++;
+                                  }
                                 }
     | TRUE              			{ $$ = criarNoOp('T', NULL, NULL); }
     | FALSE             			{ $$ = criarNoOp('F', NULL, NULL); }
