@@ -141,3 +141,7 @@ int pending_dedents = 0;
 [ ]+            { /* Ignorar espaços em branco, tabs e quebras de linha */ }
 
 %%
+
+int yywrap() {
+    return 1;
+}

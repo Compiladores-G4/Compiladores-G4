@@ -135,15 +135,15 @@ void imprimirTabela() {
   printf("==============================\n");
 }
 
-void imprimirEscopos() {
-  void printEscopo(Escopo *e, int nivel) {
-    if (!e) return;
-    printf("%*s%s\n", nivel * 2, "", e->nome);
-    for (Escopo *filho = e->prox; filho; filho = filho->prox) {
-      printEscopo(filho, nivel + 1);
-    }
+void printEscopo(Escopo *e, int nivel) {
+  if (!e) return;
+  printf("%*s%s\n", nivel * 2, "", e->nome);
+  for (Escopo *filho = e->prox; filho; filho = filho->prox) {
+    printEscopo(filho, nivel + 1);
   }
-  
+}
+
+void imprimirEscopos() {
   printf("\n===== ESTRUTURA DE ESCOPOS =====\n");
   printEscopo(escopoAtual ? escopoAtual : obterEscopoAtual(), 0);
   printf("=================================\n");
