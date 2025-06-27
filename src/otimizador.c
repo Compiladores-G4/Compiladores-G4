@@ -285,43 +285,36 @@ void analisarUsoVariaveis(CodigoIntermediario *codigo, TabelaUsoVariaveis *tabel
 void removerCodigoMorto(CodigoIntermediario *codigo) {
     if (codigo == NULL || codigo->inicio == NULL) return;
 
-    printf("Iniciando remoção de código morto...\n");
     int removidas = 0;
 
     // Cria tabela para rastrear uso de variáveis
     TabelaUsoVariaveis *tabela = criarTabelaUsoVariaveis();
 
     // Primeiro passo: marcar todas as variáveis usadas
-    printf("  Passo 1: Identificando variáveis usadas...\n");
     Instrucao *atual = codigo->inicio;
     while (atual != NULL) {
         // Marca uso em arg1 e arg2
         if (atual->arg1[0] != '\0') {
             marcarVariavelUsada(tabela, atual->arg1);
-            printf("    Marcando variável usada: %s\n", atual->arg1);
         }
         if (atual->arg2[0] != '\0') {
             marcarVariavelUsada(tabela, atual->arg2);
-            printf("    Marcando variável usada: %s\n", atual->arg2);
         }
 
         // Marca uso em condições de salto e atribuições a variáveis não temporárias
         if (atual->op == OP_CJUMP || atual->op == OP_JUMP) {
             marcarVariavelUsada(tabela, atual->resultado);
-            printf("    Marcando variável usada em controle de fluxo: %s\n", atual->resultado);
         }
         
         // Variáveis não temporárias são sempre consideradas usadas
         if (!ehTemporario(atual->resultado)) {
             marcarVariavelUsada(tabela, atual->resultado);
-            printf("    Marcando variável não temporária como usada: %s\n", atual->resultado);
         }
 
         atual = atual->prox;
     }
 
     // Segundo passo: remover instruções que definem temporários não usados
-    printf("  Passo 2: Removendo instruções com temporários não usados...\n");
     Instrucao *anterior = NULL;
     atual = codigo->inicio;
 
@@ -332,25 +325,6 @@ void removerCodigoMorto(CodigoIntermediario *codigo) {
         if (ehTemporario(atual->resultado) && !verificarVariavelUsada(tabela, atual->resultado)) {
             // Não remover chamadas de função, mesmo que o resultado não seja usado
             if (atual->op != OP_CALL) {
-                printf("    Removendo instrução: %s = ", atual->resultado);
-                if (atual->arg2[0] == '\0') {
-                    printf("%s\n", atual->arg1);
-                } else {
-                    printf("%s ", atual->arg1);
-                    switch (atual->op) {
-                        case OP_ADD: printf("+ %s\n", atual->arg2); break;
-                        case OP_SUB: printf("- %s\n", atual->arg2); break;
-                        case OP_MUL: printf("* %s\n", atual->arg2); break;
-                        case OP_DIV: printf("/ %s\n", atual->arg2); break;
-                        case OP_LT: printf("< %s\n", atual->arg2); break;
-                        case OP_GT: printf("> %s\n", atual->arg2); break;
-                        case OP_LE: printf("<= %s\n", atual->arg2); break;
-                        case OP_GE: printf(">= %s\n", atual->arg2); break;
-                        case OP_EQ: printf("== %s\n", atual->arg2); break;
-                        case OP_NE: printf("!= %s\n", atual->arg2); break;
-                        default: printf("[operação %d] %s\n", atual->op, atual->arg2); break;
-                    }
-                }
                 remover = 1;
                 removidas++;
             }
@@ -372,7 +346,6 @@ void removerCodigoMorto(CodigoIntermediario *codigo) {
         }
     }
 
-    printf("Total de instruções removidas: %d\n", removidas);
     liberarTabelaUsoVariaveis(tabela);
 }
 
@@ -380,26 +353,22 @@ void removerCodigoMorto(CodigoIntermediario *codigo) {
 void simplificarExpressoes(CodigoIntermediario *codigo) {
     if (codigo == NULL) return;
 
-    printf("Iniciando simplificação de expressões...\n");
     int simplificadas = 0;
     
     // Criar tabela para rastrear valores constantes
     TabelaConstantes *tabela = criarTabelaConstantes();
     
     // Primeiro passo: identificar atribuições diretas de constantes
-    printf("  Passo 1: Identificando variáveis com valores constantes...\n");
     Instrucao *atual = codigo->inicio;
     while (atual != NULL) {
         // Caso 1: Atribuição direta de constante (t1 = 5)
         if (atual->op == OP_ASSIGN && ehConstante(atual->arg1)) {
-            printf("    Registrando constante: %s = %s\n", atual->resultado, atual->arg1);
             registrarConstante(tabela, atual->resultado, atual->arg1);
         }
         atual = atual->prox;
     }
     
     // Segundo passo: simplificar expressões usando constantes conhecidas
-    printf("  Passo 2: Simplificando expressões...\n");
     atual = codigo->inicio;
     while (atual != NULL) {
         // Pular atribuições simples
@@ -425,25 +394,6 @@ void simplificarExpressoes(CodigoIntermediario *codigo) {
         } else {
             val2 = obterValorConstante(tabela, atual->arg2);
         }
-        
-        printf("  Analisando: %s = %s ", atual->resultado, atual->arg1);
-        switch (atual->op) {
-            case OP_ADD: printf("+ %s\n", atual->arg2); break;
-            case OP_SUB: printf("- %s\n", atual->arg2); break;
-            case OP_MUL: printf("* %s\n", atual->arg2); break;
-            case OP_DIV: printf("/ %s\n", atual->arg2); break;
-            case OP_LT: printf("< %s\n", atual->arg2); break;
-            case OP_GT: printf("> %s\n", atual->arg2); break;
-            case OP_LE: printf("<= %s\n", atual->arg2); break;
-            case OP_GE: printf(">= %s\n", atual->arg2); break;
-            case OP_EQ: printf("== %s\n", atual->arg2); break;
-            case OP_NE: printf("!= %s\n", atual->arg2); break;
-            default: printf("[operação %d] %s\n", atual->op, atual->arg2); break;
-        }
-        
-        printf("    Valores: arg1=%s (const=%s), arg2=%s (const=%s)\n", 
-               atual->arg1, val1 ? val1 : "NULL", 
-               atual->arg2, val2 ? val2 : "NULL");
         
         // Se ambos os operandos têm valores constantes conhecidos
         if (val1 != NULL && val2 != NULL) {
@@ -477,7 +427,6 @@ void simplificarExpressoes(CodigoIntermediario *codigo) {
 
             if (calculado) {
                 simplificadas++;
-                printf("    Simplificando para: %s = %g\n", atual->resultado, resultado);
                 
                 // Transforma a instrução em uma atribuição
                 atual->op = OP_ASSIGN;
@@ -498,7 +447,6 @@ void simplificarExpressoes(CodigoIntermediario *codigo) {
         atual = atual->prox;
     }
     
-    printf("Total de expressões simplificadas: %d\n", simplificadas);
     liberarTabelaConstantes(tabela);
 }
 
