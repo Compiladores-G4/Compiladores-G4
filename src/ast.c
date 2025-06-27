@@ -7,14 +7,12 @@
 static int dentroDeBranchIfElse = 0;
 int nivelIndentacao = 0;
 
-// Função auxiliar para imprimir indentação
 void imprimirIndentacao(FILE *saida) {
     for (int i = 0; i < nivelIndentacao; i++) {
         fprintf(saida, "    ");
     }
 }
 
-// Função auxiliar para inicializar nó comum
 static NoAST *criarNoBase(TipoNo tipo, char operador) {
   NoAST *novo = malloc(sizeof(NoAST));
   novo->tipo = tipo;
@@ -342,16 +340,13 @@ void marcarParametrosDeclarados(NoAST *param) {
   marcarParametrosDeclarados(param->proximoIrmao);
 }
 
-// Função auxiliar para gerar elementos de lista em C
 void gerarElementosLista(NoAST *lista, FILE *saida) {
     if (!lista) return;
     
     if (lista->tipo == NO_LISTA) {
         if (lista->operador == '[') {
-            // Lista vazia - não gera nada
             return;
         } else {
-            // Lista com elementos
             gerarCodigoC(lista->esquerda, saida);
             if (lista->direita) {
                 fprintf(saida, ", ");
@@ -359,7 +354,6 @@ void gerarElementosLista(NoAST *lista, FILE *saida) {
             }
         }
     } else {
-        // Elemento simples
         gerarCodigoC(lista, saida);
     }
 }
@@ -394,15 +388,12 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
         } break;        case NO_ATRIBUICAO: {
             char *nome = raiz->esquerda->nome;
             char *tipo = inferirTipoExpressao(raiz->direita);
-              // Verificar se é uma atribuição de lista
             if (raiz->direita->tipo == NO_LISTA) {
                 if (!variavelJaDeclarada(nome)) {
                     imprimirIndentacao(saida);
                     if (raiz->direita->operador == '[') {
-                        // Lista vazia - em C precisamos especificar tamanho ou inicializar com NULL
                         fprintf(saida, "int *%s = NULL; // Lista vazia\n", nome);
                     } else {
-                        // Lista com elementos
                         fprintf(saida, "int %s[] = {", nome);
                         gerarElementosLista(raiz->direita, saida);
                         fprintf(saida, "};\n");
@@ -410,12 +401,10 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
                     marcarVariavelDeclarada(nome);
                     if (!buscarSimbolo(nome)) inserirSimbolo(nome, "int[]");
                 } else {
-                    // Reatribuição de array (mais complexo em C)
                     imprimirIndentacao(saida);
                     fprintf(saida, "// Reatribuição de array não suportada diretamente\n");
                 }
             } else {
-                // Atribuição normal
                 imprimirIndentacao(saida);
                 if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse) {
                     if (!variavelJaDeclarada(nome) || dentroDeBranchIfElse)
@@ -472,19 +461,15 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
             fprintf(saida, ";\n"); break;
         case NO_FUNCAO: {
             inserirSimbolo(raiz->nome, "function");
-            // Não gerar headers automaticamente para main - será feito pelo main.c
             fprintf(saida, "%s %s(", obterTipoC(raiz->operador), raiz->nome);
             gerarParametros(raiz->esquerda, saida); fprintf(saida, ") {\n");
             liberarVariaveisDeclaradas(); marcarParametrosDeclarados(raiz->esquerda);
             gerarCodigoC(raiz->corpo, saida); fprintf(saida, "}\n\n");        } break;        case NO_CHAMADA:
-            // Tratar print() como função especial
             if (strcmp(raiz->nome, "print") == 0) {
                 imprimirIndentacao(saida);
                 fprintf(saida, "printf(");
                 if (raiz->esquerda) {
-                    // Se há argumentos, processar cada um
                     NoAST *arg = raiz->esquerda;
-                    // Se o argumento é uma lista, pegar o primeiro elemento
                     if (arg->tipo == NO_LISTA) {
                         arg = arg->esquerda;
                     }
@@ -500,7 +485,6 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
                         gerarCodigoC(arg, saida);
                         fprintf(saida, " ? \"True\" : \"False\"");
                     } else if (arg->tipo == NO_ID) {
-                        // Inferir tipo da variável para escolher formato correto
                         char *tipo = inferirTipoExpressao(arg);
                         if (strcmp(tipo, "int") == 0) {
                             fprintf(saida, "\"%%d\\n\", ");
@@ -517,7 +501,6 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
                             gerarCodigoC(arg, saida);
                         }
                     } else {
-                        // Para expressões mais complexas
                         fprintf(saida, "\"%%d\\n\", ");
                         gerarCodigoC(arg, saida);
                     }
@@ -526,7 +509,6 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
                 }
                 fprintf(saida, ");\n");
             } else {
-                // Chamada de função normal
                 fprintf(saida, "%s(", raiz->nome); 
                 gerarArgumentos(raiz->esquerda, saida); 
                 fprintf(saida, ")");
@@ -534,7 +516,6 @@ void gerarCodigoC(NoAST *raiz, FILE *saida) {
             break;
         case NO_BLOCO: gerarCodigoC(raiz->esquerda, saida); break;
         case NO_LISTA: {
-            // Para listas simples, gerar apenas os elementos (usado em contextos específicos)
             fprintf(saida, "{");
             gerarElementosLista(raiz, saida);
             fprintf(saida, "}");

@@ -6,7 +6,6 @@
 Simbolo *tabela = NULL;
 Escopo *escopoAtual = NULL;
 
-// Inicializa o escopo global
 void inicializarEscopos() {
   if (!escopoAtual) {
     escopoAtual = malloc(sizeof(Escopo));
@@ -16,16 +15,14 @@ void inicializarEscopos() {
   }
 }
 
-// Cria um novo escopo
 void criarEscopo(char *nome) {
-  inicializarEscopos(); // Garante que o escopo global exista
+  inicializarEscopos(); 
   
   Escopo *novo = malloc(sizeof(Escopo));
   strcpy(novo->nome, nome);
   novo->pai = escopoAtual;
   novo->prox = NULL;
   
-  // Adiciona como filho do escopo atual
   Escopo *ultimo = escopoAtual;
   while (ultimo->prox) ultimo = ultimo->prox;
   ultimo->prox = novo;
@@ -33,30 +30,25 @@ void criarEscopo(char *nome) {
   escopoAtual = novo;
 }
 
-// Sai do escopo atual
 void sairEscopo() {
   if (escopoAtual && escopoAtual->pai) {
     escopoAtual = escopoAtual->pai;
   }
 }
 
-// Retorna o escopo atual
 Escopo *obterEscopoAtual() {
   inicializarEscopos();
   return escopoAtual;
 }
 
-// Retorna o nome do escopo atual
 char *obterNomeEscopoAtual() {
   return obterEscopoAtual()->nome;
 }
 
-// Insere um símbolo no escopo atual
 void inserirSimbolo(char *nome, char *tipo) {
   inserirSimboloComEscopo(nome, tipo, obterNomeEscopoAtual());
 }
 
-// Insere um símbolo em um escopo específico
 void inserirSimboloComEscopo(char *nome, char *tipo, char *escopo) {
   Simbolo *s = buscarSimboloNoEscopo(nome, escopo);
   if (s) {
@@ -80,7 +72,6 @@ void inserirSimboloComEscopo(char *nome, char *tipo, char *escopo) {
   tabela = novo;
 }
 
-// Busca um símbolo em um escopo específico
 Simbolo *buscarSimboloNoEscopo(char *nome, char *escopo) {
   for (Simbolo *s = tabela; s; s = s->prox) {
     if (!strcmp(s->nome, nome) && !strcmp(s->escopo, escopo)) {
@@ -90,7 +81,6 @@ Simbolo *buscarSimboloNoEscopo(char *nome, char *escopo) {
   return NULL;
 }
 
-// Busca um símbolo na cadeia de escopos
 Simbolo *buscarSimbolo(char *nome) {
   for (Escopo *e = obterEscopoAtual(); e; e = e->pai) {
     Simbolo *s = buscarSimboloNoEscopo(nome, e->nome);
@@ -99,7 +89,6 @@ Simbolo *buscarSimbolo(char *nome) {
   return NULL;
 }
 
-// Imprime a tabela de símbolos
 void imprimirTabela() {
   printf("\n===== TABELA DE SÍMBOLOS =====\n");
   printf("Nome\tTipo\tEscopo\n");
@@ -110,7 +99,6 @@ void imprimirTabela() {
   printf("==============================\n");
 }
 
-// Imprime a estrutura de escopos
 void imprimirEscopos() {
   void printEscopo(Escopo *e, int nivel) {
     if (!e) return;
@@ -125,7 +113,6 @@ void imprimirEscopos() {
   printf("=================================\n");
 }
 
-// Verifica se um identificador foi declarado
 int verificarDeclaracao(char *nome) {
   if (!buscarSimbolo(nome)) {
     printf("Erro semântico: variável '%s' não declarada\n", nome);
@@ -134,7 +121,6 @@ int verificarDeclaracao(char *nome) {
   return 1;
 }
 
-// Verifica compatibilidade de tipos
 int tiposCompativeis(char *tipo1, char *tipo2) {
   if (!strcmp(tipo1, tipo2) || !strcmp(tipo1, "desconhecido") || !strcmp(tipo2, "desconhecido")) {
     return 1;
@@ -143,7 +129,6 @@ int tiposCompativeis(char *tipo1, char *tipo2) {
          (!strcmp(tipo1, "float") && !strcmp(tipo2, "int"));
 }
 
-// Verifica se uma atribuição é válida
 int verificarAtribuicao(char *destino, char *origem) {
   Simbolo *s_dest = buscarSimbolo(destino);
   Simbolo *s_orig = buscarSimbolo(origem);
@@ -158,7 +143,6 @@ int verificarAtribuicao(char *destino, char *origem) {
   return 1;
 }
 
-// Determina o tipo resultante de uma operação
 char *obterTipoResultante(char *tipo1, char *tipo2, char operador) {
   if (!strcmp(tipo1, "desconhecido") || !strcmp(tipo2, "desconhecido")) return "desconhecido";
   
@@ -178,7 +162,6 @@ char *obterTipoResultante(char *tipo1, char *tipo2, char operador) {
   return "desconhecido";
 }
 
-// Verifica se uma operação é válida
 int verificarOperacao(char *nome1, char *nome2, char operador) {
   Simbolo *s1 = buscarSimbolo(nome1);
   Simbolo *s2 = buscarSimbolo(nome2);
@@ -199,7 +182,7 @@ int verificarOperacao(char *nome1, char *nome2, char operador) {
     return 0;
   }
   
-  if ((operador == '+' || operador == '-' || operador == '*' || operador == '/') && 
+  if ((operador == '+' || operador == '-' || operador == '*' || operador == '/' || operador == '%') && 
       strcmp(s1->tipo, "int") && strcmp(s1->tipo, "float") && strcmp(s1->tipo, "desconhecido") && 
       strcmp(s2->tipo, "int") && strcmp(s2->tipo, "float") && strcmp(s2->tipo, "desconhecido")) {
     printf("Erro semântico: operador '%c' requer numéricos\n", operador);

@@ -3,7 +3,8 @@
 #include <string.h>
 #include "ast.h"
 #include "tabela.h"
-#include "gerador.h"  // Incluímos o cabeçalho do gerador
+#include "gerador.h"  
+#include "otimizador.h" 
 
 extern int yyparse(void);
 extern FILE *yyin;
@@ -16,6 +17,17 @@ int main(int arc, char **argv) {
   if (arc < 2) {
     fprintf(stderr, "Uso: %s <arquivo_de_entrada>\n", argv[0]);
     return 1;
+  }
+
+  char *filename = argv[1];
+  char *basename = strrchr(filename, '/');
+  if (basename == NULL) {
+    basename = strrchr(filename, '\\');
+  }
+  if (basename != NULL) {
+    basename++; 
+  } else {
+    basename = filename;
   }
 
   FILE *input = fopen(argv[1], "r");
@@ -33,9 +45,16 @@ int main(int arc, char **argv) {
     return 1;
   }
 
+  raiz = NULL;
+  extern void inicializarCompilador();
+  inicializarCompilador();
+  
+  fprintf(stdout, "AST reinicializada: raiz = %p\n", (void*)raiz);
+  
   yyin = input;
 
   int parse_result = yyparse();
+  fprintf(stdout, "Após yyparse: raiz = %p\n", (void*)raiz);
   
   if (parse_result == 0 && raiz != NULL) {
     fprintf(stdout, "AST gerada com sucesso!\n");
@@ -45,19 +64,34 @@ int main(int arc, char **argv) {
       fprintf(stderr, "\nForam encontrados %d erro(s) semântico(s).\n", erros_semanticos);
     } else {
       fprintf(stdout, "\nNenhum erro semântico encontrado!\n");
+      fprintf(stdout, "Antes de gerar código intermediário: raiz = %p\n", (void*)raiz);
       
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
-        fprintf(stdout, "Código intermediário gerado com sucesso!\n");
+        fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO =====\n");
         imprimirCodigoIntermediario(codigo);
         
-        FILE *codInterFile = fopen("codigo_intermediario.txt", "w");
+        char output_filename[256];
+        char *dot = strrchr(basename, '.');
+        if (dot != NULL) {
+            *dot = '\0'; 
+        }
+        
+        if (strncmp(basename, "Teste_", 6) == 0) {
+            snprintf(output_filename, sizeof(output_filename), "%s_intermediario.txt", basename);
+        } else {
+            snprintf(output_filename, sizeof(output_filename), "Teste_%s_intermediario.txt", basename);
+        }
+        
+        FILE *codInterFile = fopen(output_filename, "w");
         if (codInterFile != NULL) {
           FILE *stdout_orig = stdout;
           stdout = codInterFile;
           imprimirCodigoIntermediario(codigo);
           stdout = stdout_orig; 
           fclose(codInterFile);
+          
+          fprintf(stdout, "Código intermediário salvo em: %s\n", output_filename);
         }
         
         liberarCodigoIntermediario(codigo);
@@ -77,7 +111,6 @@ int main(int arc, char **argv) {
     fprintf(output, "#include <stdio.h>\n");
     fprintf(output, "#include <stdbool.h>\n\n");
     
-    // Verificar se há funções definidas na AST
     int temFuncoes = 0;
     NoAST *atual = raiz;
     while (atual != NULL) {
@@ -89,24 +122,17 @@ int main(int arc, char **argv) {
     }
     
     if (temFuncoes) {
-        // Se há funções definidas, gerar normalmente
         gerarCodigoC(raiz, output);
         
-        // Gerar função main() automaticamente
         fprintf(output, "\nint main() {\n");
         
-        // Percorrer a AST para encontrar funções definidas e gerar chamadas de teste
         atual = raiz;
         while (atual != NULL) {
             if (atual->tipo == NO_FUNCAO) {
                 if (strcmp(atual->nome, "main") != 0) { 
-                    
-                    // Gerar chamada básica dependendo dos parâmetros
                     if (atual->esquerda == NULL) {
-                        // Função sem parâmetros
                         fprintf(output, "    %s();\n", atual->nome);
                     } else {
-                        // Função com parâmetros não será chamada automaticamente
                     }
                 }
             }
@@ -116,16 +142,12 @@ int main(int arc, char **argv) {
         fprintf(output, "    return 0;\n");
         fprintf(output, "}\n");
     } else {
-        // Se não há funções, colocar todo o código dentro de main()
         fprintf(output, "int main() {\n");
-        
-        // Definir um nível de indentação inicial para o corpo da main
         extern int nivelIndentacao;
         nivelIndentacao = 1;
         
         gerarCodigoC(raiz, output);
         
-        // Resetar indentação
         nivelIndentacao = 0;
         
         fprintf(output, "    return 0;\n");

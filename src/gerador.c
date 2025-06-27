@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Inicializa a estrutura de código intermediário
 CodigoIntermediario* inicializarCodigoIntermediario() {
     CodigoIntermediario *codigo = (CodigoIntermediario*)malloc(sizeof(CodigoIntermediario));
     if (codigo == NULL) {
@@ -19,7 +18,6 @@ CodigoIntermediario* inicializarCodigoIntermediario() {
     return codigo;
 }
 
-// Libera a memória alocada para o código intermediário
 void liberarCodigoIntermediario(CodigoIntermediario *codigo) {
     if (codigo == NULL) return;
     
@@ -33,7 +31,6 @@ void liberarCodigoIntermediario(CodigoIntermediario *codigo) {
     free(codigo);
 }
 
-// Adiciona uma nova instrução ao código intermediário
 void adicionarInstrucao(CodigoIntermediario *codigo, TipoOperacao op, 
                         const char *resultado, const char *arg1, const char *arg2, int rotulo) {
     Instrucao *nova = (Instrucao*)malloc(sizeof(Instrucao));
@@ -56,7 +53,6 @@ void adicionarInstrucao(CodigoIntermediario *codigo, TipoOperacao op,
     nova->rotulo = rotulo;
     nova->prox = NULL;
     
-    // Adiciona a instrução à lista
     if (codigo->inicio == NULL) {
         codigo->inicio = nova;
         codigo->fim = nova;
@@ -66,25 +62,23 @@ void adicionarInstrucao(CodigoIntermediario *codigo, TipoOperacao op,
     }
 }
 
-// Gera um novo nome de variável temporária
 char* gerarTemporario(CodigoIntermediario *codigo) {
     static char temp[16];
     sprintf(temp, "t%d", codigo->numTemporarios++);
     return strdup(temp);
 }
 
-// Gera um novo rótulo para saltos
 int gerarRotulo(CodigoIntermediario *codigo) {
     return codigo->numRotulos++;
 }
 
-// Converte operador da AST para operador de código intermediário
 TipoOperacao mapearOperador(char op) {
     switch(op) {
         case '+': return OP_ADD;
         case '-': return OP_SUB;
         case '*': return OP_MUL;
         case '/': return OP_DIV;
+        case '%': return OP_MOD;
         case '=': return OP_EQ;
         case '!': return OP_NE;
         case '<': return OP_LT;
@@ -98,9 +92,11 @@ TipoOperacao mapearOperador(char op) {
     }
 }
 
-// Gera código para uma expressão
 void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultado) {
-    if (no == NULL) return;
+    if (no == NULL) {
+        adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0", NULL, -1);
+        return;
+    }
     
     char *temp1;
     char *temp2;
@@ -112,7 +108,7 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             adicionarInstrucao(codigo, OP_ASSIGN, resultado, valorStr, NULL, -1);
             break;
             
-        case NO_FLOAT:           // Adicionar caso para float
+        case NO_FLOAT:           
             sprintf(valorStr, "%.6f", no->valorFloat);
             adicionarInstrucao(codigo, OP_ASSIGN, resultado, valorStr, NULL, -1);
             break;
@@ -122,17 +118,16 @@ void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultad
             break;
             
         case NO_OPERADOR:
-            // Operadores especiais como True(T) e False(F)
             if (no->operador == 'T') {
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "true", NULL, -1);
                 return;
             } else if (no->operador == 'F') {
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "false", NULL, -1);
                 return;
-            } else if (no->operador == 'f') { // Float literal (compatibilidade)
+            } else if (no->operador == 'f') {
                 adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0.0", NULL, -1);
                 return;
-            } else if (no->operador == '~') { // NOT (operador unário)
+            } else if (no->operador == '~') {
                 char *temp1 = gerarTemporario(codigo);
                 gerarCodigoExpressao(codigo, no->esquerda, temp1);
                 adicionarInstrucao(codigo, OP_NOT, resultado, temp1, NULL, -1);
@@ -224,19 +219,15 @@ void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
                 gerarCodigoFor(codigo, atual);
                 break;
             default:
-                // Tratar outros tipos se necessário
                 break;
         }
         atual = atual->proximoIrmao;
     }
     
-    // Salto para o fim do if-else
     adicionarInstrucao(codigo, OP_JUMP, NULL, NULL, NULL, rotuloFim);
     
-    // Rótulo para o bloco 'else'
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFalso);
     
-    // Código para o bloco 'else' se existir
     if (no->direita) {
         atual = no->direita;
         while (atual != NULL) {
@@ -257,20 +248,17 @@ void gerarCodigoCondicional(CodigoIntermediario *codigo, NoAST *no) {
                     gerarCodigoFor(codigo, atual);
                     break;
                 default:
-                    // Tratar outros tipos se necessário
                     break;
             }
             atual = atual->proximoIrmao;
         }
     }
     
-    // Rótulo para o fim do if-else
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFim);
     
     free(condicao);
 }
 
-// Gera código para uma estrutura de laço (while)
 void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
@@ -278,16 +266,12 @@ void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no) {
     int rotuloFim = gerarRotulo(codigo);
     char *condicao = gerarTemporario(codigo);
     
-    // Rótulo de início do laço
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloInicio);
     
-    // Gera código para a condição
     gerarCodigoExpressao(codigo, no->condicao, condicao);
     
-    // Salto condicional: se condição falsa, vai para 'rotuloFim'
     adicionarInstrucao(codigo, OP_CJUMP, NULL, condicao, "0", rotuloFim);
     
-    // Código para o corpo do laço
     NoAST *atual = no->corpo;
     while (atual != NULL) {
         switch (atual->tipo) {
@@ -307,31 +291,31 @@ void gerarCodigoLaco(CodigoIntermediario *codigo, NoAST *no) {
                 gerarCodigoFor(codigo, atual);
                 break;
             default:
-                // Tratar outros tipos se necessário
                 break;
         }
         atual = atual->proximoIrmao;
     }
     
-    // Salto incondicional de volta para o início do laço
     adicionarInstrucao(codigo, OP_JUMP, NULL, NULL, NULL, rotuloInicio);
     
-    // Rótulo para o fim do laço
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFim);
     
     free(condicao);
 }
 
-// Gera código para uma estrutura de laço for
 void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
-    // Extrair variável, início, fim, passo e corpo
     NoAST *variavel = no->esquerda;
     NoAST *inicio = no->direita;
     NoAST *fim = no->condicao;
-    NoAST *passo = no->proximoIrmao;
+    NoAST *passo = no->passo;
     NoAST *corpo = no->corpo;
+    
+    if (variavel == NULL) {
+        fprintf(stderr, "Erro: Variável de iteração não definida no loop for\n");
+        return;
+    }
     
     int rotuloInicio = gerarRotulo(codigo);
     int rotuloFim = gerarRotulo(codigo);
@@ -339,23 +323,31 @@ void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
     char *tempFim = gerarTemporario(codigo);
     char *tempPasso = gerarTemporario(codigo);
     
-    // Inicializar variável de iteração
     char *tempInicio = gerarTemporario(codigo);
-    gerarCodigoExpressao(codigo, inicio, tempInicio);
+    if (inicio != NULL) {
+        gerarCodigoExpressao(codigo, inicio, tempInicio);
+    } else {
+        adicionarInstrucao(codigo, OP_ASSIGN, tempInicio, "0", NULL, -1);
+    }
     adicionarInstrucao(codigo, OP_ASSIGN, variavel->nome, tempInicio, NULL, 0);
     
-    // Gerar código para fim e passo
-    gerarCodigoExpressao(codigo, fim, tempFim);
-    gerarCodigoExpressao(codigo, passo, tempPasso);
+    if (fim != NULL) {
+        gerarCodigoExpressao(codigo, fim, tempFim);
+    } else {
+        adicionarInstrucao(codigo, OP_ASSIGN, tempFim, "1000000", NULL, -1);
+    }
     
-    // Rótulo de início do laço
+    if (passo != NULL) {
+        gerarCodigoExpressao(codigo, passo, tempPasso);
+    } else {
+        adicionarInstrucao(codigo, OP_ASSIGN, tempPasso, "1", NULL, -1);
+    }
+    
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloInicio);
     
-    // Verificar condição: variavel < fim
     adicionarInstrucao(codigo, OP_LT, tempCondicao, variavel->nome, tempFim, 0);
     adicionarInstrucao(codigo, OP_CJUMP, NULL, tempCondicao, "0", rotuloFim);
     
-    // Código para o corpo do laço
     NoAST *atual = corpo;
     while (atual != NULL) {
         switch (atual->tipo) {
@@ -375,19 +367,15 @@ void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
                 gerarCodigoFor(codigo, atual);
                 break;
             default:
-                // Tratar outros tipos se necessário
                 break;
         }
         atual = atual->proximoIrmao;
     }
     
-    // Incrementar variável de iteração
     adicionarInstrucao(codigo, OP_ADD, variavel->nome, variavel->nome, tempPasso, 0);
     
-    // Salto incondicional de volta para o início do laço
     adicionarInstrucao(codigo, OP_JUMP, NULL, NULL, NULL, rotuloInicio);
     
-    // Rótulo para o fim do laço
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFim);
     
     free(tempCondicao);
@@ -396,23 +384,19 @@ void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
     free(tempInicio);
 }
 
-// Gera código para uma definição de função
 void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no) {
     if (no == NULL) return;
     
-    // Gera rótulo e instrução para início da função
     int rotuloFuncao = gerarRotulo(codigo);
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloFuncao);
     
-    // Código especial para marcar início de função
     char funcName[64];
-    char nomeFuncao[40]; // Reduced size to fit in sprintf with suffixes
+    char nomeFuncao[40];
     strncpy(nomeFuncao, no->nome, sizeof(nomeFuncao) - 1);
-    nomeFuncao[sizeof(nomeFuncao) - 1] = '\0'; // Ensure null termination
+    nomeFuncao[sizeof(nomeFuncao) - 1] = '\0'; 
     sprintf(funcName, "FUNC_%s_BEGIN", nomeFuncao);
     adicionarInstrucao(codigo, OP_LABEL, funcName, NULL, NULL, -1);
     
-    // Processar parâmetros da função
     NoAST *param = no->esquerda;
     int paramCount = 0;
     while (param != NULL) {
@@ -425,7 +409,6 @@ void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no) {
         param = param->proximoIrmao;
     }
     
-    // Gera código para o corpo da função
     NoAST *atual = no->corpo;
     while (atual != NULL) {
         switch (atual->tipo) {
@@ -445,35 +428,30 @@ void gerarCodigoFuncao(CodigoIntermediario *codigo, NoAST *no) {
                 gerarCodigoFor(codigo, atual);
                 break;
             case NO_OPERADOR:
-                if (atual->operador == 'r') {  // Return
+                if (atual->operador == 'r') {  
                     if (atual->esquerda) {
                         char *temp = gerarTemporario(codigo);
                         gerarCodigoExpressao(codigo, atual->esquerda, temp);
                         adicionarInstrucao(codigo, OP_RETURN, NULL, temp, NULL, -1);
                         free(temp);
                     } else {
-                        // Return sem valor
                         adicionarInstrucao(codigo, OP_RETURN, NULL, NULL, NULL, -1);
                     }
                 }
                 break;
             default:
-                // Outros tipos se necessário
                 break;
         }
         atual = atual->proximoIrmao;
     }
     
-    // Código especial para marcar fim de função
     sprintf(funcName, "FUNC_%s_END", nomeFuncao);
     adicionarInstrucao(codigo, OP_LABEL, funcName, NULL, NULL, -1);
 }
 
-// Gera código para uma chamada de função
 void gerarCodigoChamada(CodigoIntermediario *codigo, NoAST *no, char *resultado) {
     if (no == NULL) return;
     
-    // Processar argumentos da chamada
     NoAST *arg = no->esquerda;
     int numArgs = 0;
     
@@ -489,22 +467,27 @@ void gerarCodigoChamada(CodigoIntermediario *codigo, NoAST *no, char *resultado)
         arg = arg->proximoIrmao;
     }
     
-    // Instrução de chamada de função
     adicionarInstrucao(codigo, OP_CALL, resultado, no->nome, NULL, -1);
 }
 
-// Função principal para geração de código intermediário
 CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
-    if (raiz == NULL) return NULL;
+    if (raiz == NULL) {
+        fprintf(stderr, "ERRO: AST raiz é NULL em gerarCodigoIntermediario\n");
+        return NULL;
+    }
+    
+    fprintf(stdout, "DEBUG: Gerando código intermediário para AST com raiz tipo=%d\n", raiz->tipo);
     
     CodigoIntermediario *codigo = inicializarCodigoIntermediario();
     
-    // Inicia o código com um rótulo principal
     adicionarInstrucao(codigo, OP_LABEL, "main", NULL, NULL, -1);
     
-    // Percorre a árvore e gera código para cada nó
     NoAST *atual = raiz;
+    int contador_nos = 0;
     while (atual != NULL) {
+        fprintf(stdout, "DEBUG: Processando nó tipo=%d, nome=%s\n", atual->tipo, 
+                atual->nome ? atual->nome : "(sem nome)");
+        contador_nos++;
         switch (atual->tipo) {
             case NO_ATRIBUICAO:
                 gerarCodigoAtribuicao(codigo, atual);
@@ -525,19 +508,18 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
                 gerarCodigoFuncao(codigo, atual);
                 break;
             default:
-                // Outros casos se necessário
                 break;
         }
         atual = atual->proximoIrmao;
     }
     
-    // Finaliza o código com uma instrução especial
+    fprintf(stdout, "DEBUG: Total de nós processados: %d\n", contador_nos);
+    
     adicionarInstrucao(codigo, OP_LABEL, "end", NULL, NULL, -1);
     
     return codigo;
 }
 
-// Imprime o código intermediário gerado
 void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
     if (codigo == NULL) return;
     
@@ -545,7 +527,6 @@ void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
     
     Instrucao *atual = codigo->inicio;
     while (atual != NULL) {
-        // Imprime rótulo se houver
         if (atual->op == OP_LABEL) {
             if (atual->rotulo >= 0) {
                 printf("L%d:\n", atual->rotulo);
@@ -553,10 +534,8 @@ void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
                 printf("%s:\n", atual->resultado);
             }
         } else {
-            // Indenta instruções normais
             printf("    ");
             
-            // Imprime instrução de acordo com o tipo
             switch(atual->op) {
                 case OP_ADD:
                     printf("%s = %s + %s\n", atual->resultado, atual->arg1, atual->arg2);
@@ -569,6 +548,9 @@ void imprimirCodigoIntermediario(CodigoIntermediario *codigo) {
                     break;
                 case OP_DIV:
                     printf("%s = %s / %s\n", atual->resultado, atual->arg1, atual->arg2);
+                    break;
+                case OP_MOD:
+                    printf("%s = %s %% %s\n", atual->resultado, atual->arg1, atual->arg2);
                     break;
                 case OP_ASSIGN:
                     printf("%s = %s\n", atual->resultado, atual->arg1);
