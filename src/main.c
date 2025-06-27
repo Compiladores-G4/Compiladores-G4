@@ -19,6 +19,18 @@ int main(int arc, char **argv) {
     return 1;
   }
 
+  // Extrair o nome base do arquivo para usar nos arquivos de saída
+  char *filename = argv[1];
+  char *basename = strrchr(filename, '/');
+  if (basename == NULL) {
+    basename = strrchr(filename, '\\');
+  }
+  if (basename != NULL) {
+    basename++; // Pular o caractere '/' ou '\\'
+  } else {
+    basename = filename;
+  }
+
   FILE *input = fopen(argv[1], "r");
   if (input == NULL) {
     fprintf(stderr, "Erro ao abrir o arquivo de entrada: %s\n", argv[1]);
@@ -34,9 +46,18 @@ int main(int arc, char **argv) {
     return 1;
   }
 
+  // Reinicializar a AST e outras estruturas globais
+  raiz = NULL;
+  extern void inicializarCompilador();
+  inicializarCompilador();
+  
+  // Adicionar debug para verificar se a AST está sendo corretamente reinicializada
+  fprintf(stdout, "AST reinicializada: raiz = %p\n", (void*)raiz);
+  
   yyin = input;
 
   int parse_result = yyparse();
+  fprintf(stdout, "Após yyparse: raiz = %p\n", (void*)raiz);
   
   if (parse_result == 0 && raiz != NULL) {
     fprintf(stdout, "AST gerada com sucesso!\n");
@@ -46,24 +67,36 @@ int main(int arc, char **argv) {
       fprintf(stderr, "\nForam encontrados %d erro(s) semântico(s).\n", erros_semanticos);
     } else {
       fprintf(stdout, "\nNenhum erro semântico encontrado!\n");
+      fprintf(stdout, "Antes de gerar código intermediário: raiz = %p\n", (void*)raiz);
       
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
-        fprintf(stdout, "Código intermediário gerado com sucesso!\n");
+        fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO =====\n");
         imprimirCodigoIntermediario(codigo); // Imprime antes da otimização
-
-        // Otimiza o código intermediário
-        codigo = otimizarCodigoIntermediario(codigo);
-        fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO OTIMIZADO =====\n");
-        imprimirCodigoIntermediario(codigo); // Imprime após a otimização
         
-        FILE *codInterFile = fopen("codigo_intermediario.txt", "w");
+        // Criar nome do arquivo de saída baseado no nome do arquivo de entrada
+        char output_filename[256];
+        char *dot = strrchr(basename, '.');
+        if (dot != NULL) {
+            *dot = '\0'; // Remover extensão
+        }
+        
+        // Verificar se o nome já começa com "Teste_" para evitar duplicação
+        if (strncmp(basename, "Teste_", 6) == 0) {
+            snprintf(output_filename, sizeof(output_filename), "%s_intermediario.txt", basename);
+        } else {
+            snprintf(output_filename, sizeof(output_filename), "Teste_%s_intermediario.txt", basename);
+        }
+        
+        FILE *codInterFile = fopen(output_filename, "w");
         if (codInterFile != NULL) {
           FILE *stdout_orig = stdout;
           stdout = codInterFile;
           imprimirCodigoIntermediario(codigo);
           stdout = stdout_orig; 
           fclose(codInterFile);
+          
+          fprintf(stdout, "Código intermediário salvo em: %s\n", output_filename);
         }
         
         liberarCodigoIntermediario(codigo);

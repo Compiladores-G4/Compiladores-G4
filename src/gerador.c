@@ -100,7 +100,11 @@ TipoOperacao mapearOperador(char op) {
 
 // Gera código para uma expressão
 void gerarCodigoExpressao(CodigoIntermediario *codigo, NoAST *no, char *resultado) {
-    if (no == NULL) return;
+    if (no == NULL) {
+        // Se o nó for NULL, atribuir 0 ao resultado (valor padrão)
+        adicionarInstrucao(codigo, OP_ASSIGN, resultado, "0", NULL, -1);
+        return;
+    }
     
     char *temp1;
     char *temp2;
@@ -330,8 +334,14 @@ void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
     NoAST *variavel = no->esquerda;
     NoAST *inicio = no->direita;
     NoAST *fim = no->condicao;
-    NoAST *passo = no->proximoIrmao;
+    NoAST *passo = no->passo;
     NoAST *corpo = no->corpo;
+    
+    // Verificar se os nós são válidos
+    if (variavel == NULL) {
+        fprintf(stderr, "Erro: Variável de iteração não definida no loop for\n");
+        return;
+    }
     
     int rotuloInicio = gerarRotulo(codigo);
     int rotuloFim = gerarRotulo(codigo);
@@ -341,12 +351,28 @@ void gerarCodigoFor(CodigoIntermediario *codigo, NoAST *no) {
     
     // Inicializar variável de iteração
     char *tempInicio = gerarTemporario(codigo);
-    gerarCodigoExpressao(codigo, inicio, tempInicio);
+    if (inicio != NULL) {
+        gerarCodigoExpressao(codigo, inicio, tempInicio);
+    } else {
+        // Se início não for especificado, usar 0 como padrão
+        adicionarInstrucao(codigo, OP_ASSIGN, tempInicio, "0", NULL, -1);
+    }
     adicionarInstrucao(codigo, OP_ASSIGN, variavel->nome, tempInicio, NULL, 0);
     
     // Gerar código para fim e passo
-    gerarCodigoExpressao(codigo, fim, tempFim);
-    gerarCodigoExpressao(codigo, passo, tempPasso);
+    if (fim != NULL) {
+        gerarCodigoExpressao(codigo, fim, tempFim);
+    } else {
+        // Se fim não for especificado, usar um valor grande como padrão
+        adicionarInstrucao(codigo, OP_ASSIGN, tempFim, "1000000", NULL, -1);
+    }
+    
+    if (passo != NULL) {
+        gerarCodigoExpressao(codigo, passo, tempPasso);
+    } else {
+        // Se passo não for especificado, usar 1 como padrão
+        adicionarInstrucao(codigo, OP_ASSIGN, tempPasso, "1", NULL, -1);
+    }
     
     // Rótulo de início do laço
     adicionarInstrucao(codigo, OP_LABEL, NULL, NULL, NULL, rotuloInicio);
@@ -495,8 +521,15 @@ void gerarCodigoChamada(CodigoIntermediario *codigo, NoAST *no, char *resultado)
 
 // Função principal para geração de código intermediário
 CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
-    if (raiz == NULL) return NULL;
+    if (raiz == NULL) {
+        fprintf(stderr, "ERRO: AST raiz é NULL em gerarCodigoIntermediario\n");
+        return NULL;
+    }
     
+    // Verificar se a AST é válida e imprimir informações de debug
+    fprintf(stdout, "DEBUG: Gerando código intermediário para AST com raiz tipo=%d\n", raiz->tipo);
+    
+    // Inicializar o código intermediário sem nenhum código de exemplo
     CodigoIntermediario *codigo = inicializarCodigoIntermediario();
     
     // Inicia o código com um rótulo principal
@@ -504,7 +537,11 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
     
     // Percorre a árvore e gera código para cada nó
     NoAST *atual = raiz;
+    int contador_nos = 0;
     while (atual != NULL) {
+        fprintf(stdout, "DEBUG: Processando nó tipo=%d, nome=%s\n", atual->tipo, 
+                atual->nome ? atual->nome : "(sem nome)");
+        contador_nos++;
         switch (atual->tipo) {
             case NO_ATRIBUICAO:
                 gerarCodigoAtribuicao(codigo, atual);
@@ -530,6 +567,8 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
         }
         atual = atual->proximoIrmao;
     }
+    
+    fprintf(stdout, "DEBUG: Total de nós processados: %d\n", contador_nos);
     
     // Finaliza o código com uma instrução especial
     adicionarInstrucao(codigo, OP_LABEL, "end", NULL, NULL, -1);
