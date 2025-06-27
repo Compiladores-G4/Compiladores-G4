@@ -168,7 +168,13 @@ statements:
 statement:
 	variable_declaration { $$ = $1; }
 	| RETURN { $$ = criarNoOp('r', NULL, NULL); }
-	| RETURN expr { $$ = criarNoOp('r', $2, NULL); }
+	| RETURN expr { 
+		// Verificar se a variável no return foi declarada
+		if ($2->tipo == NO_ID && !verificarDeclaracao($2->nome)) {
+			erros_semanticos++;
+		}
+		$$ = criarNoOp('r', $2, NULL); 
+	}
 	| conditional_stmt { $$ = $1; }
 	| while_stmt { $$ = $1; }
 	| for_stmt { $$ = $1; }
