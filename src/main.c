@@ -3,8 +3,8 @@
 #include <string.h>
 #include "ast.h"
 #include "tabela.h"
-#include "gerador.h"  // Incluímos o cabeçalho do gerador
-#include "otimizador.h" // Incluímos o cabeçalho do otimizador
+#include "gerador.h"  
+#include "otimizador.h" 
 
 extern int yyparse(void);
 extern FILE *yyin;
@@ -19,14 +19,13 @@ int main(int arc, char **argv) {
     return 1;
   }
 
-  // Extrair o nome base do arquivo para usar nos arquivos de saída
   char *filename = argv[1];
   char *basename = strrchr(filename, '/');
   if (basename == NULL) {
     basename = strrchr(filename, '\\');
   }
   if (basename != NULL) {
-    basename++; // Pular o caractere '/' ou '\\'
+    basename++; 
   } else {
     basename = filename;
   }
@@ -46,12 +45,10 @@ int main(int arc, char **argv) {
     return 1;
   }
 
-  // Reinicializar a AST e outras estruturas globais
   raiz = NULL;
   extern void inicializarCompilador();
   inicializarCompilador();
   
-  // Adicionar debug para verificar se a AST está sendo corretamente reinicializada
   fprintf(stdout, "AST reinicializada: raiz = %p\n", (void*)raiz);
   
   yyin = input;
@@ -72,16 +69,14 @@ int main(int arc, char **argv) {
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
         fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO =====\n");
-        imprimirCodigoIntermediario(codigo); // Imprime antes da otimização
+        imprimirCodigoIntermediario(codigo);
         
-        // Criar nome do arquivo de saída baseado no nome do arquivo de entrada
         char output_filename[256];
         char *dot = strrchr(basename, '.');
         if (dot != NULL) {
-            *dot = '\0'; // Remover extensão
+            *dot = '\0'; 
         }
         
-        // Verificar se o nome já começa com "Teste_" para evitar duplicação
         if (strncmp(basename, "Teste_", 6) == 0) {
             snprintf(output_filename, sizeof(output_filename), "%s_intermediario.txt", basename);
         } else {
@@ -116,7 +111,6 @@ int main(int arc, char **argv) {
     fprintf(output, "#include <stdio.h>\n");
     fprintf(output, "#include <stdbool.h>\n\n");
     
-    // Verificar se há funções definidas na AST
     int temFuncoes = 0;
     NoAST *atual = raiz;
     while (atual != NULL) {
@@ -128,24 +122,17 @@ int main(int arc, char **argv) {
     }
     
     if (temFuncoes) {
-        // Se há funções definidas, gerar normalmente
         gerarCodigoC(raiz, output);
         
-        // Gerar função main() automaticamente
         fprintf(output, "\nint main() {\n");
         
-        // Percorrer a AST para encontrar funções definidas e gerar chamadas de teste
         atual = raiz;
         while (atual != NULL) {
             if (atual->tipo == NO_FUNCAO) {
                 if (strcmp(atual->nome, "main") != 0) { 
-                    
-                    // Gerar chamada básica dependendo dos parâmetros
                     if (atual->esquerda == NULL) {
-                        // Função sem parâmetros
                         fprintf(output, "    %s();\n", atual->nome);
                     } else {
-                        // Função com parâmetros não será chamada automaticamente
                     }
                 }
             }
@@ -155,16 +142,12 @@ int main(int arc, char **argv) {
         fprintf(output, "    return 0;\n");
         fprintf(output, "}\n");
     } else {
-        // Se não há funções, colocar todo o código dentro de main()
         fprintf(output, "int main() {\n");
-        
-        // Definir um nível de indentação inicial para o corpo da main
         extern int nivelIndentacao;
         nivelIndentacao = 1;
         
         gerarCodigoC(raiz, output);
         
-        // Resetar indentação
         nivelIndentacao = 0;
         
         fprintf(output, "    return 0;\n");

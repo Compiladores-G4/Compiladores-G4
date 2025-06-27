@@ -302,6 +302,12 @@ expr:
                                       verificarOperacao($1->nome, $3->nome, '/');
                                   }
                                 }
+    | expr MOD expr     			{ 
+                                  $$ = criarNoOp('%', $1, $3); 
+                                  if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
+                                      verificarOperacao($1->nome, $3->nome, '%');
+                                  }
+                                }
     | expr EQ expr     			{ 
                                   $$ = criarNoOp('=', $1, $3); 
                                   if ($1->tipo == NO_ID && $3->tipo == NO_ID) {
