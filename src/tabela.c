@@ -68,6 +68,33 @@ void inserirSimboloComEscopo(char *nome, char *tipo, char *escopo) {
   strcpy(novo->tipo, tipo);
   strcpy(novo->escopo, escopo);
   novo->valor = NULL;
+  novo->ehFuncao = 0;           // Por padrão, não é função
+  novo->numParametros = 0;      // Zero parâmetros por padrão
+  strcpy(novo->tipoRetorno, "void"); // Tipo de retorno padrão
+  novo->prox = tabela;
+  tabela = novo;
+}
+
+void inserirFuncao(char *nome, char *tipoRetorno, int numParametros) {
+  Simbolo *s = buscarSimboloNoEscopo(nome, obterNomeEscopoAtual());
+  if (s) {
+    printf("Erro semântico: função '%s' já declarada no escopo atual\n", nome);
+    return;
+  }
+  
+  Simbolo *novo = malloc(sizeof(Simbolo));
+  if (!novo) {
+    fprintf(stderr, "Erro: Falha na alocação de memória\n");
+    return;
+  }
+  
+  strcpy(novo->nome, nome);
+  strcpy(novo->tipo, "function");
+  strcpy(novo->escopo, obterNomeEscopoAtual());
+  strcpy(novo->tipoRetorno, tipoRetorno);
+  novo->valor = NULL;
+  novo->ehFuncao = 1;
+  novo->numParametros = numParametros;
   novo->prox = tabela;
   tabela = novo;
 }
@@ -89,10 +116,19 @@ Simbolo *buscarSimbolo(char *nome) {
   return NULL;
 }
 
+Simbolo *buscarFuncao(char *nome) {
+  for (Simbolo *s = tabela; s; s = s->prox) {
+    if (!strcmp(s->nome, nome) && s->ehFuncao) {
+      return s;
+    }
+  }
+  return NULL;
+}
+
 void imprimirTabela() {
   printf("\n===== TABELA DE SÍMBOLOS =====\n");
   printf("Nome\tTipo\tEscopo\n");
-  printf("---------------------------\n");
+  printf("-------------------------\n");
   for (Simbolo *s = tabela; s; s = s->prox) {
     printf("%s\t%s\t%s\n", s->nome, s->tipo, s->escopo);
   }

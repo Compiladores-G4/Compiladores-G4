@@ -10,6 +10,9 @@ typedef struct Simbolo {
   char tipo[TAM_TIPO];
   void *valor;
   char escopo[TAM_ESCOPO];  // Nome do escopo ao qual o símbolo pertence
+  int ehFuncao;             // Flag para indicar se é uma função (1) ou variável (0)
+  int numParametros;        // Número de parâmetros da função (apenas para funções)
+  char tipoRetorno[TAM_TIPO]; // Tipo de retorno da função (apenas para funções)
   struct Simbolo *prox;
 } Simbolo;
 
@@ -21,7 +24,9 @@ typedef struct Escopo {
 
 // Funções de manipulação de símbolos
 void inserirSimbolo(char *nome, char *tipo);
+void inserirFuncao(char *nome, char *tipoRetorno, int numParametros);
 Simbolo *buscarSimbolo(char *nome);
+Simbolo *buscarFuncao(char *nome);
 void imprimirTabela();
 void atualizarSimboloValor(char *nome, void *valor);
 
