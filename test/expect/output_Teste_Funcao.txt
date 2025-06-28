@@ -1,0 +1,69 @@
+Analisando arquivo: ./test/input/Teste_Funcao.py
+AST gerada com sucesso!
+Função: v foo
+  Corpo:
+    Operador: r
+Função: v soma
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: x
+      Direita:
+        Número: 1
+    Atribuição:
+      Esquerda:
+        Identificador: y
+      Direita:
+        Número: 2
+    Atribuição:
+      Esquerda:
+        Identificador: z
+      Direita:
+        Operador: +
+          Esquerda:
+            Identificador: x
+          Direita:
+            Identificador: y
+    Operador: r
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+L0:
+FUNC_foo_BEGIN:
+    return
+FUNC_foo_END:
+L1:
+FUNC_soma_BEGIN:
+    t0 = 1
+    x = t0
+    t1 = 2
+    y = t1
+    t3 = x
+    t4 = y
+    t2 = t3 + t4
+    z = t2
+    return
+FUNC_soma_END:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+z	int	soma
+y	int	soma
+x	int	soma
+soma	function	global
+foo	function	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+  foo
+    soma
+  soma
+=================================

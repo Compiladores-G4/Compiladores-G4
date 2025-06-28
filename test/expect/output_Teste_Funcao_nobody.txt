@@ -1,0 +1,39 @@
+Analisando arquivo: ./test/input/Teste_Funcao_nobody.py
+AST gerada com sucesso!
+Função: v foo
+  Corpo:
+    Operador: r
+Função: v bar
+  Corpo:
+    Operador: r
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+L0:
+FUNC_foo_BEGIN:
+    return
+FUNC_foo_END:
+L1:
+FUNC_bar_BEGIN:
+    return
+FUNC_bar_END:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+bar	function	global
+foo	function	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+  foo
+    bar
+  bar
+=================================

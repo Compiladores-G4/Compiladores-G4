@@ -1,0 +1,50 @@
+Analisando arquivo: ./test/input/Teste_Variaveis.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: x
+  Direita:
+    Número: 1
+Atribuição:
+  Esquerda:
+    Identificador: y
+  Direita:
+    Número: 2
+Atribuição:
+  Esquerda:
+    Identificador: z
+  Direita:
+    Operador: +
+      Esquerda:
+        Identificador: x
+      Direita:
+        Identificador: y
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 1
+    x = t0
+    t1 = 2
+    y = t1
+    t3 = x
+    t4 = y
+    t2 = t3 + t4
+    z = t2
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+z	int	global
+y	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

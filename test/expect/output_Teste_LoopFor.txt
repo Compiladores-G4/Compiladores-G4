@@ -1,0 +1,101 @@
+Analisando arquivo: ./test/input/Teste_LoopFor.py
+AST gerada com sucesso!
+For:
+  Condição:
+    Número: 5
+  Variável:
+    Identificador: i
+  Início:
+    Número: 0
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: x
+      Direita:
+        Número: 5
+For:
+  Condição:
+    Número: 8
+  Variável:
+    Identificador: j
+  Início:
+    Número: 2
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: y
+      Direita:
+        Número: 4
+For:
+  Condição:
+    Número: 10
+  Variável:
+    Identificador: k
+  Início:
+    Número: 0
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: z
+      Direita:
+        Número: 1
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t3 = 0
+    i = t3
+    t1 = 5
+    t2 = 1
+L0:
+    t0 = i < t1
+    if t0 == 0 goto L1
+    t4 = 5
+    x = t4
+    i = i + t2
+    goto L0
+L1:
+    t8 = 2
+    j = t8
+    t6 = 8
+    t7 = 1
+L2:
+    t5 = j < t6
+    if t5 == 0 goto L3
+    t9 = 4
+    y = t9
+    j = j + t7
+    goto L2
+L3:
+    t13 = 0
+    k = t13
+    t11 = 10
+    t12 = 2
+L4:
+    t10 = k < t11
+    if t10 == 0 goto L5
+    t14 = 1
+    z = t14
+    k = k + t12
+    goto L4
+L5:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+k	int	global
+z	int	global
+j	int	global
+y	int	global
+i	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

@@ -1,0 +1,56 @@
+Analisando arquivo: ./test/input/Teste_loop_while.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: i
+  Direita:
+    Número: 0
+While:
+  Condição:
+    Operador: <
+      Esquerda:
+        Identificador: i
+      Direita:
+        Número: 3
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: i
+      Direita:
+        Operador: +
+          Esquerda:
+            Identificador: i
+          Direita:
+            Número: 1
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 0
+    i = t0
+L0:
+    t2 = i
+    t3 = 3
+    t1 = t2 < t3
+    if t1 == 0 goto L1
+    t5 = i
+    t6 = 1
+    t4 = t5 + t6
+    i = t4
+    goto L0
+L1:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+i	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

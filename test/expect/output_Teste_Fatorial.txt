@@ -1,0 +1,86 @@
+Analisando arquivo: ./test/input/Teste_Fatorial.py
+AST gerada com sucesso!
+Função: i fatorial
+  Esquerda:
+    Declaração: i n
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: resultado
+      Direita:
+        Número: 1
+    While:
+      Condição:
+        Operador: >
+          Esquerda:
+            Identificador: n
+          Direita:
+            Número: 1
+      Corpo:
+        Atribuição:
+          Esquerda:
+            Identificador: resultado
+          Direita:
+            Operador: *
+              Esquerda:
+                Identificador: resultado
+              Direita:
+                Identificador: n
+        Atribuição:
+          Esquerda:
+            Identificador: n
+          Direita:
+            Operador: -
+              Esquerda:
+                Identificador: n
+              Direita:
+                Número: 1
+    Operador: r
+      Esquerda:
+        Identificador: resultado
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+L0:
+FUNC_fatorial_BEGIN:
+    param param_n
+    t0 = 1
+    resultado = t0
+L1:
+    t2 = n
+    t3 = 1
+    t1 = t2 > t3
+    if t1 == 0 goto L2
+    t5 = resultado
+    t6 = n
+    t4 = t5 * t6
+    resultado = t4
+    t8 = n
+    t9 = 1
+    t7 = t8 - t9
+    n = t7
+    goto L1
+L2:
+    t10 = resultado
+    return t10
+FUNC_fatorial_END:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+n	int	fatorial
+resultado	int	fatorial
+fatorial	function	global
+n	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+  fatorial
+=================================

@@ -1,0 +1,87 @@
+Analisando arquivo: ./test/input/Teste_Funcao_com_param.py
+AST gerada com sucesso!
+Função: i soma
+  Esquerda:
+    Declaração: i a
+    Declaração: i b
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: c
+      Direita:
+        Operador: +
+          Esquerda:
+            Identificador: a
+          Direita:
+            Identificador: b
+    Operador: r
+      Esquerda:
+        Identificador: c
+Função: f multiplicar
+  Esquerda:
+    Declaração: f x
+    Declaração: f y
+  Corpo:
+    Atribuição:
+      Esquerda:
+        Identificador: resultado
+      Direita:
+        Operador: *
+          Esquerda:
+            Identificador: x
+          Direita:
+            Identificador: y
+    Operador: r
+      Esquerda:
+        Identificador: resultado
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+L0:
+FUNC_soma_BEGIN:
+    param param_a
+    param param_b
+    t1 = a
+    t2 = b
+    t0 = t1 + t2
+    c = t0
+    t3 = c
+    return t3
+FUNC_soma_END:
+L1:
+FUNC_multiplicar_BEGIN:
+    param param_x
+    param param_y
+    t5 = x
+    t6 = y
+    t4 = t5 * t6
+    resultado = t4
+    t7 = resultado
+    return t7
+FUNC_multiplicar_END:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+resultado	int	multiplicar
+multiplicar	function	global
+y	float	global
+x	float	global
+c	int	soma
+soma	function	global
+b	int	global
+a	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+  soma
+    multiplicar
+  multiplicar
+=================================

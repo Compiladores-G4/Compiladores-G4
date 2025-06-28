@@ -1,0 +1,124 @@
+Analisando arquivo: ./test/input/Teste_Condicionais_print.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: x
+  Direita:
+    Número: 5
+Atribuição:
+  Esquerda:
+    Identificador: y
+  Direita:
+    Número: 10
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Operador: T
+Atribuição:
+  Esquerda:
+    Identificador: b
+  Direita:
+    Operador: F
+If:
+  Condição:
+    Operador: &
+      Esquerda:
+        Operador: >
+          Esquerda:
+            Identificador: x
+          Direita:
+            Número: 0
+      Direita:
+        Operador: <
+          Esquerda:
+            Identificador: y
+          Direita:
+            Número: 20
+  Bloco Then:
+    Atribuição:
+      Esquerda:
+        Identificador: result
+      Direita:
+        Operador: T
+    Chamada: print
+      Esquerda:
+        Lista:
+          Esquerda:
+            Identificador: result
+  Bloco Else:
+    Atribuição:
+      Esquerda:
+        Identificador: result
+      Direita:
+        Operador: F
+    Chamada: print
+      Esquerda:
+        Lista:
+          Esquerda:
+            Identificador: result
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Identificador: a
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Identificador: b
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Operador: +
+          Esquerda:
+            Identificador: x
+          Direita:
+            Identificador: y
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    x = t0
+    t1 = 10
+    y = t1
+    t2 = true
+    a = t2
+    t3 = false
+    b = t3
+    t7 = x
+    t8 = 0
+    t5 = t7 > t8
+    t9 = y
+    t10 = 20
+    t6 = t9 < t10
+    t4 = t5 && t6
+    if t4 == 0 goto L0
+    t11 = true
+    result = t11
+    goto L1
+L0:
+    t12 = false
+    result = t12
+L1:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+result	bool	global
+b	bool	global
+a	bool	global
+y	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

@@ -1,0 +1,55 @@
+Analisando arquivo: ./test/input/Teste_Impressao.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: x
+  Direita:
+    Número: 5
+Atribuição:
+  Esquerda:
+    Identificador: y
+  Direita:
+    Número: 10
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Identificador: x
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Identificador: y
+Chamada: print
+  Esquerda:
+    Lista:
+      Esquerda:
+        Operador: +
+          Esquerda:
+            Identificador: x
+          Direita:
+            Identificador: y
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    x = t0
+    t1 = 10
+    y = t1
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+y	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

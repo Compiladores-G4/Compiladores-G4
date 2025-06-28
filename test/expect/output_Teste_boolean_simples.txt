@@ -1,0 +1,62 @@
+Analisando arquivo: ./test/input/Teste_boolean_simples.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: x
+  Direita:
+    Número: 5
+Atribuição:
+  Esquerda:
+    Identificador: y
+  Direita:
+    Número: 10
+Atribuição:
+  Esquerda:
+    Identificador: result
+  Direita:
+    Operador: &
+      Esquerda:
+        Operador: >
+          Esquerda:
+            Identificador: x
+          Direita:
+            Número: 0
+      Direita:
+        Operador: <
+          Esquerda:
+            Identificador: y
+          Direita:
+            Número: 20
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    x = t0
+    t1 = 10
+    y = t1
+    t5 = x
+    t6 = 0
+    t3 = t5 > t6
+    t7 = y
+    t8 = 20
+    t4 = t7 < t8
+    t2 = t3 && t4
+    result = t2
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+result	int	global
+y	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

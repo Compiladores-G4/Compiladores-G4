@@ -1,0 +1,38 @@
+Analisando arquivo: ./test/input/Teste_Lista.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Lista:
+      Esquerda:
+        Número: 1
+      Direita:
+        Lista:
+          Esquerda:
+            Número: 2
+          Direita:
+            Lista:
+              Esquerda:
+                Número: 3
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = [...]
+    a = t0
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+a	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

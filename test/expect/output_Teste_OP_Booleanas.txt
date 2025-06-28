@@ -1,0 +1,189 @@
+Analisando arquivo: ./test/input/Teste_OP_Booleanas.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: x
+  Direita:
+    Número: 5
+Atribuição:
+  Esquerda:
+    Identificador: y
+  Direita:
+    Número: 10
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Operador: T
+Atribuição:
+  Esquerda:
+    Identificador: b
+  Direita:
+    Operador: F
+If:
+  Condição:
+    Operador: &
+      Esquerda:
+        Operador: >
+          Esquerda:
+            Identificador: x
+          Direita:
+            Número: 0
+      Direita:
+        Operador: <
+          Esquerda:
+            Identificador: y
+          Direita:
+            Número: 20
+  Bloco Then:
+    Atribuição:
+      Esquerda:
+        Identificador: result
+      Direita:
+        Operador: T
+  Bloco Else:
+    Atribuição:
+      Esquerda:
+        Identificador: result
+      Direita:
+        Operador: F
+If:
+  Condição:
+    Operador: |
+      Esquerda:
+        Identificador: a
+      Direita:
+        Identificador: b
+  Bloco Then:
+    Atribuição:
+      Esquerda:
+        Identificador: value
+      Direita:
+        Número: 1
+  Bloco Else:
+    Atribuição:
+      Esquerda:
+        Identificador: value
+      Direita:
+        Número: 0
+If:
+  Condição:
+    Operador: ~
+      Esquerda:
+        Identificador: a
+  Bloco Then:
+    Atribuição:
+      Esquerda:
+        Identificador: flag
+      Direita:
+        Operador: F
+  Bloco Else:
+    Atribuição:
+      Esquerda:
+        Identificador: flag
+      Direita:
+        Operador: T
+Atribuição:
+  Esquerda:
+    Identificador: condition
+  Direita:
+    Operador: |
+      Esquerda:
+        Operador: &
+          Esquerda:
+            Operador: >
+              Esquerda:
+                Identificador: x
+              Direita:
+                Número: 0
+          Direita:
+            Operador: <
+              Esquerda:
+                Identificador: y
+              Direita:
+                Número: 20
+      Direita:
+        Operador: ~
+          Esquerda:
+            Identificador: b
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    x = t0
+    t1 = 10
+    y = t1
+    t2 = true
+    a = t2
+    t3 = false
+    b = t3
+    t7 = x
+    t8 = 0
+    t5 = t7 > t8
+    t9 = y
+    t10 = 20
+    t6 = t9 < t10
+    t4 = t5 && t6
+    if t4 == 0 goto L0
+    t11 = true
+    result = t11
+    goto L1
+L0:
+    t12 = false
+    result = t12
+L1:
+    t14 = a
+    t15 = b
+    t13 = t14 || t15
+    if t13 == 0 goto L2
+    t16 = 1
+    value = t16
+    goto L3
+L2:
+    t17 = 0
+    value = t17
+L3:
+    t19 = a
+    t18 = !t19
+    if t18 == 0 goto L4
+    t20 = false
+    flag = t20
+    goto L5
+L4:
+    t21 = true
+    flag = t21
+L5:
+    t27 = x
+    t28 = 0
+    t25 = t27 > t28
+    t29 = y
+    t30 = 20
+    t26 = t29 < t30
+    t23 = t25 && t26
+    t31 = b
+    t24 = !t31
+    t22 = t23 || t24
+    condition = t22
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+condition	int	global
+flag	bool	global
+value	int	global
+result	bool	global
+b	bool	global
+a	bool	global
+y	int	global
+x	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

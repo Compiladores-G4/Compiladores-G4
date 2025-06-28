@@ -1,0 +1,142 @@
+Analisando arquivo: ./test/input/Teste_Expressoes_mat.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Número: 5
+Atribuição:
+  Esquerda:
+    Identificador: b
+  Direita:
+    Número: 3
+Atribuição:
+  Esquerda:
+    Identificador: c
+  Direita:
+    Número: 2
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Operador: +
+      Esquerda:
+        Número: 1
+      Direita:
+        Número: 1
+Atribuição:
+  Esquerda:
+    Identificador: b
+  Direita:
+    Operador: *
+      Esquerda:
+        Número: 2
+      Direita:
+        Número: 2
+Atribuição:
+  Esquerda:
+    Identificador: c
+  Direita:
+    Operador: /
+      Esquerda:
+        Número: 8
+      Direita:
+        Número: 4
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Operador: +
+      Esquerda:
+        Identificador: a
+      Direita:
+        Identificador: b
+Atribuição:
+  Esquerda:
+    Identificador: b
+  Direita:
+    Operador: *
+      Esquerda:
+        Identificador: b
+      Direita:
+        Identificador: c
+Atribuição:
+  Esquerda:
+    Identificador: c
+  Direita:
+    Operador: /
+      Esquerda:
+        Identificador: c
+      Direita:
+        Identificador: a
+Atribuição:
+  Esquerda:
+    Identificador: d
+  Direita:
+    Operador: *
+      Esquerda:
+        Operador: +
+          Esquerda:
+            Identificador: a
+          Direita:
+            Identificador: b
+      Direita:
+        Identificador: c
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    a = t0
+    t1 = 3
+    b = t1
+    t2 = 2
+    c = t2
+    t4 = 1
+    t5 = 1
+    t3 = t4 + t5
+    a = t3
+    t7 = 2
+    t8 = 2
+    t6 = t7 * t8
+    b = t6
+    t10 = 8
+    t11 = 4
+    t9 = t10 / t11
+    c = t9
+    t13 = a
+    t14 = b
+    t12 = t13 + t14
+    a = t12
+    t16 = b
+    t17 = c
+    t15 = t16 * t17
+    b = t15
+    t19 = c
+    t20 = a
+    t18 = t19 / t20
+    c = t18
+    t24 = a
+    t25 = b
+    t22 = t24 + t25
+    t23 = c
+    t21 = t22 * t23
+    d = t21
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+d	int	global
+c	int	global
+b	int	global
+a	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================

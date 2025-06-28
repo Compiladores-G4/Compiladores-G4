@@ -1,0 +1,59 @@
+Analisando arquivo: ./test/input/Teste_IfElse_initial.py
+AST gerada com sucesso!
+Atribuição:
+  Esquerda:
+    Identificador: a
+  Direita:
+    Número: 5
+If:
+  Condição:
+    Operador: >
+      Esquerda:
+        Identificador: a
+      Direita:
+        Número: 0
+  Bloco Then:
+    Atribuição:
+      Esquerda:
+        Identificador: b
+      Direita:
+        Número: 1
+  Bloco Else:
+    Atribuição:
+      Esquerda:
+        Identificador: b
+      Direita:
+        Número: 2
+
+Nenhum erro semântico encontrado!
+
+===== CÓDIGO INTERMEDIÁRIO =====
+
+main:
+    t0 = 5
+    a = t0
+    t2 = a
+    t3 = 0
+    t1 = t2 > t3
+    if t1 == 0 goto L0
+    t4 = 1
+    b = t4
+    goto L1
+L0:
+    t5 = 2
+    b = t5
+L1:
+end:
+
+================================
+
+===== TABELA DE SÍMBOLOS =====
+Nome	Tipo	Escopo
+-------------------------
+b	int	global
+a	int	global
+==============================
+
+===== ESTRUTURA DE ESCOPOS =====
+global
+=================================
