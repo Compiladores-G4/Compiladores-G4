@@ -1,5 +1,5 @@
 # RELATÓRIO TÉCNICO - COMPILADOR PYTHON PARA C
- 
+
 **Projeto:** Compiladores-G4   
 
 ---
@@ -23,12 +23,35 @@ Foram executados **16 casos de teste** abrangendo todas as funcionalidades supor
 - Operações booleanas compostas
 - Listas e arrays básicos
 
+#### **Estrutura de Testes**
+
+Os arquivos de teste estão divididos em:
+
+```
+test/
+├── input/         # Arquivos de entrada (.py) para cada teste
+├── expect/        # Saídas esperadas (.txt) para cada teste
+```
+
+- Cada arquivo de teste Python deve estar em `test/input/`.
+- Para cada arquivo de entrada `NOME.py`, a saída esperada deve estar em `test/expect/output_NOME.txt`.
+
+#### **Automação dos Testes**
+
+Este script executa automaticamente todos os testes presentes em `test/input/`, compara a saída do compilador com os arquivos esperados em `test/expect/` e exibe o resultado de cada teste no terminal.
+
 ### 2.2 Comando de Execução dos Testes
 
+**Execução automatizada:**
 ```bash
-cd /home/Documentos/Compiladores-G4/test
-./run_test.sh
+python3 run_test.py
 ```
+
+O script irá:
+- Executar o compilador para cada arquivo em `test/input/`
+- Comparar a saída do compilador com o arquivo esperado em `test/expect/`
+- Exibir no terminal se cada teste passou ou falhou, mostrando as diferenças quando houver
+
 
 ### 2.3 Resultados Detalhados por Categoria
 
@@ -156,7 +179,6 @@ FUNC_fatorial_END:
 
 #### 3.2.1 Comando para Medição de Tempo
 ```bash
-cd /home/Documentos/Compiladores-G4
 time make clean && time make
 ```
 
@@ -247,27 +269,27 @@ O compilador atingiu todos os objetivos propostos:
 ## 7. COMANDOS UTILIZADOS PARA MÉTRICAS
 
 ### 7.1 Execução dos Testes
+
+**Execução automatizada:**
 ```bash
-cd /home/harrymartins/Documentos/Compiladores-G4/test
-./run_test.sh
+python3 run_test.py
 ```
+
+
 
 ### 7.2 Contagem de Linhas de Código
 ```bash
-cd /home/harrymartins/Documentos/Compiladores-G4
 wc -l src/*.c src/*.l src/*.y include/*.h
 ```
 
 ### 7.3 Medição de Tempo de Compilação
 ```bash
-cd /home/harrymartins/Documentos/Compiladores-G4
 time make clean && time make
 ```
 
 
 ### 7.4 Compilação e Teste Individual
 ```bash
-cd /home/harrymartins/Documentos/Compiladores-G4
 ./bin/compilador test/Teste_Variaveis.py
 ./bin/compilador test/Teste_Fatorial.py
 ```

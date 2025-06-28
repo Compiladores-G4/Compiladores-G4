@@ -49,7 +49,9 @@ Compiladores-G4/
 │   ├── tabela.h
 │   ├── gerador.h
 │   └── tipos.h
-├── test/                  # Arquivos de teste
+├── test/               
+    ├── expect/            # saída esperada
+    ├── input/             # testes
 ├── docs/                  # Documentação
 ├── bin/                   # Executável compilado
 └── obj/                   # Arquivos objeto
@@ -82,20 +84,15 @@ sudo pacman -S flex bison gcc make
 
 ### Compilação
 
-1. **Clone e navegue para o diretório:**
-```bash
-cd /home/harrymartins/Documentos/Compiladores-G4
-```
-
-2. **Compile o projeto:**
+1. **Compile o projeto:**
 ```bash
 make clean  # Limpa arquivos anteriores
 make        # Compila o compilador
 ```
 
-3. **Execute com um arquivo Python:**
+2. **Execute com um arquivo Python:**
 ```bash
-./bin/compilador arquivo_teste.py
+./bin/compilador ./test/input/arquivo_teste.py
 ```
 
 ### Exemplo de Uso
@@ -116,7 +113,7 @@ print(y)
 
 **Comando:**
 ```bash
-./bin/compilador teste.py
+./bin/compilador ./test/input/teste.py
 ```
 
 **Saída (output.c):**
@@ -143,37 +140,42 @@ int main() {
 
 ## Como Rodar os Testes
 
-### Executar Todos os Testes
+### Organização dos Testes
 
-```bash
-cd test
-./run_test.sh
+Os testes estão organizados da seguinte forma:
+
+```
+test/
+├── input/         # Arquivos de entrada (.py) para cada teste
+├── expect/        # Saídas esperadas (.txt) para cada teste
 ```
 
-Este script:
-1. Recompila o projeto automaticamente
-2. Executa todos os arquivos `.py` no diretório `test/`
-3. Gera arquivos de saída e código intermediário
-4. Exibe os resultados de cada teste
+- Cada arquivo de teste Python deve estar em `test/input/`.
+- Para cada arquivo de entrada `NOME.py`, a saída esperada deve estar em `test/expect/output_NOME.txt`.
 
-### Executar Teste Individual
+### Execução Automatizada dos Testes
+
+O script Python, `run_test.py`, automatiza a execução dos testes. Ele executa o compilador para cada arquivo de teste em `test/input/` e compara a saída gerada com o arquivo correspondente em `test/expect/`.
+
+#### Rodar Todos os Testes
 
 ```bash
-./bin/compilador test/Teste_Variaveis.py
+python3 run_test.py
 ```
 
-### Arquivos de Teste Disponíveis
+O script irá:
+1. Executar o compilador para cada arquivo em `test/input/`
+2. Comparar a saída do compilador com o arquivo esperado em `test/expect/`
+3. Exibir no terminal se cada teste passou ou falhou, mostrando as diferenças quando houver.
 
-- `Teste_Variaveis.py` - Declaração de variáveis
-- `Teste_Expressoes_mat.py` - Expressões matemáticas
-- `Teste_OP_Booleanas.py` - Operações booleanas
-- `Teste_Condicionais.py` - Estruturas if/elif/else
-- `Teste_loop_while.py` - Laços while
-- `Teste_LoopFor.py` - Laços for
-- `Teste_Funcao*.py` - Definições de funções
-- `Teste_Fatorial.py` - Exemplo completo
-- `Teste_Lista.py` - Listas
-- `Teste_Impressao.py` - Função print
+#### Rodar Teste Individual
+
+Para rodar um teste individual, basta executar o script e ele irá processar todos os testes. Para testar manualmente um arquivo específico:
+
+```bash
+./bin/compilador test/input/NOME.py
+```
+E compare manualmente com `test/expect/output_NOME.txt`.
 
 ### Limpeza dos Arquivos de Teste
 
@@ -217,23 +219,11 @@ O compilador gera três tipos de saída:
 - **Otimizações Básicas**: Eliminação de redundâncias
 - **Geração C**: Tradução para C padrão
 
-
-## Desenvolvimento
-
-### Makefile
-
-```bash
-make           # Compila o projeto
-make clean     # Remove arquivos gerados
-make all       # Equivalente a make
-```
-
 ## 🤝 Contribuidores
 
 <a href="https://github.com/Compiladores-G4/Compiladores-G4/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Compiladores-G4/Compiladores-G4" />
 </a>
-
 
 | Contribuidores | Matrícula | 
 |----------|----------|
@@ -242,4 +232,4 @@ make all       # Equivalente a make
 | Breno Queiroz Lima  | 211063069  | 
 | Flavio Gustavo Araújo de Melo  | 211030602  |    
 | Harryson Campos Martins  | 211039466  | 
-| Yan Werlley de Freitas Paulo  | 211030649 | 
+| Yan Werlley de Freitas Paulo  | 211030649 |
