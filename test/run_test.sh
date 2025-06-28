@@ -20,7 +20,7 @@ for testfile in *.py; do
     echo "Executando teste com $testfile..."
     
     # Executar o compilador e capturar toda a saída
-    ../bin/compilador "$testfile" > "${testfile%.py}.out" 2>&1
+    ../bin/compilador "$testfile" &1
     
     # O compilador agora gera arquivo específico com nome do teste
     expected_file="${testfile%.py}_intermediario.txt"

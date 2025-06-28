@@ -9,20 +9,19 @@ typedef struct Simbolo {
   char nome[TAM_NOME];
   char tipo[TAM_TIPO];
   void *valor;
-  char escopo[TAM_ESCOPO];  // Nome do escopo ao qual o símbolo pertence
-  int ehFuncao;             // Flag para indicar se é uma função (1) ou variável (0)
-  int numParametros;        // Número de parâmetros da função (apenas para funções)
-  char tipoRetorno[TAM_TIPO]; // Tipo de retorno da função (apenas para funções)
+  char escopo[TAM_ESCOPO]; 
+  int ehFuncao;             
+  int numParametros;       
+  char tipoRetorno[TAM_TIPO]; 
   struct Simbolo *prox;
 } Simbolo;
 
 typedef struct Escopo {
   char nome[TAM_ESCOPO];
-  struct Escopo *pai;       // Referência ao escopo pai para busca encadeada
-  struct Escopo *prox;      // Próximo escopo no mesmo nível (para iteração)
+  struct Escopo *pai;       
+  struct Escopo *prox;     
 } Escopo;
 
-// Funções de manipulação de símbolos
 void inserirSimbolo(char *nome, char *tipo);
 void inserirFuncao(char *nome, char *tipoRetorno, int numParametros);
 Simbolo *buscarSimbolo(char *nome);
@@ -30,7 +29,6 @@ Simbolo *buscarFuncao(char *nome);
 void imprimirTabela();
 void atualizarSimboloValor(char *nome, void *valor);
 
-// Funções de manipulação de escopos
 void inicializarEscopos();
 void criarEscopo(char *nome);
 void sairEscopo();
@@ -39,12 +37,10 @@ char *obterNomeEscopoAtual();
 void imprimirEscopos();
 void destruirEscopos();
 
-// Funções de símbolos com escopo
 void inserirSimboloComEscopo(char *nome, char *tipo, char *escopo);
 Simbolo *buscarSimboloNoEscopo(char *nome, char *escopo);
-Simbolo *buscarSimboloCadeiaEscopos(char *nome); // Busca em cadeia de escopos
+Simbolo *buscarSimboloCadeiaEscopos(char *nome); 
 
-// Funções de análise semântica
 int verificarDeclaracao(char *nome);
 int tiposCompativeis(char *tipo1, char *tipo2);
 int verificarAtribuicao(char *destino, char *origem);

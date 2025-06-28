@@ -476,8 +476,6 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
         return NULL;
     }
     
-    fprintf(stdout, "DEBUG: Gerando código intermediário para AST com raiz tipo=%d\n", raiz->tipo);
-    
     CodigoIntermediario *codigo = inicializarCodigoIntermediario();
     
     adicionarInstrucao(codigo, OP_LABEL, "main", NULL, NULL, -1);
@@ -485,8 +483,6 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
     NoAST *atual = raiz;
     int contador_nos = 0;
     while (atual != NULL) {
-        fprintf(stdout, "DEBUG: Processando nó tipo=%d, nome=%s\n", atual->tipo, 
-                atual->nome ? atual->nome : "(sem nome)");
         contador_nos++;
         switch (atual->tipo) {
             case NO_ATRIBUICAO:
@@ -512,8 +508,6 @@ CodigoIntermediario* gerarCodigoIntermediario(NoAST *raiz) {
         }
         atual = atual->proximoIrmao;
     }
-    
-    fprintf(stdout, "DEBUG: Total de nós processados: %d\n", contador_nos);
     
     adicionarInstrucao(codigo, OP_LABEL, "end", NULL, NULL, -1);
     

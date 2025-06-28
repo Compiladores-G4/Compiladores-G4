@@ -49,12 +49,9 @@ int main(int arc, char **argv) {
   extern void inicializarCompilador();
   inicializarCompilador();
   
-  fprintf(stdout, "AST reinicializada: raiz = %p\n", (void*)raiz);
-  
   yyin = input;
 
   int parse_result = yyparse();
-  fprintf(stdout, "Após yyparse: raiz = %p\n", (void*)raiz);
   
   if (parse_result == 0 && raiz != NULL) {
     fprintf(stdout, "AST gerada com sucesso!\n");
@@ -64,36 +61,16 @@ int main(int arc, char **argv) {
       fprintf(stderr, "\nForam encontrados %d erro(s) semântico(s).\n", erros_semanticos);
     } else {
       fprintf(stdout, "\nNenhum erro semântico encontrado!\n");
-      fprintf(stdout, "Antes de gerar código intermediário: raiz = %p\n", (void*)raiz);
       
       CodigoIntermediario *codigo = gerarCodigoIntermediario(raiz);
       if (codigo != NULL) {
-        fprintf(stdout, "\n===== CÓDIGO INTERMEDIÁRIO =====\n");
         imprimirCodigoIntermediario(codigo);
         
-        char output_filename[256];
         char *dot = strrchr(basename, '.');
         if (dot != NULL) {
             *dot = '\0'; 
         }
-        
-        if (strncmp(basename, "Teste_", 6) == 0) {
-            snprintf(output_filename, sizeof(output_filename), "%s_intermediario.txt", basename);
-        } else {
-            snprintf(output_filename, sizeof(output_filename), "Teste_%s_intermediario.txt", basename);
-        }
-        
-        FILE *codInterFile = fopen(output_filename, "w");
-        if (codInterFile != NULL) {
-          FILE *stdout_orig = stdout;
-          stdout = codInterFile;
-          imprimirCodigoIntermediario(codigo);
-          stdout = stdout_orig; 
-          fclose(codInterFile);
-          
-          fprintf(stdout, "Código intermediário salvo em: %s\n", output_filename);
-        }
-        
+              
         liberarCodigoIntermediario(codigo);
       }
     }
